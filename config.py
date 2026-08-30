@@ -6,9 +6,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _normalize_db_url(url: str) -> str:
+    # Many hosts (Render, Heroku, Neon) hand out the legacy "postgres://" scheme,
+    # which SQLAlchemy 2.0 rejects — rewrite it to the "postgresql://" it expects.
+    if url.startswith("postgres://"):
+        url = "postgresql://" + url[len("postgres://"):]
+    return url
+
+
 class Settings:
-    # Core
-    DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./atoac.db")
+    # Core — set DATABASE_URL to a managed Postgres for persistent storage; blank
+    # (default) uses a local SQLite file (ephemeral on most hosts).
+    DATABASE_URL: str = _normalize_db_url(os.getenv("DATABASE_URL", "sqlite:///./atoac.db"))
     JWT_SECRET: str = os.getenv("JWT_SECRET", "change-me-in-production")
     JWT_EXPIRY_HOURS: int = int(os.getenv("JWT_EXPIRY_HOURS", "2"))
     JWT_ALGORITHM: str = "HS256"

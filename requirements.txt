@@ -6,4 +6,5 @@ python-dotenv==1.0.1
 PyJWT==2.10.1
 bcrypt==4.2.1
 httpx==0.28.1
+psycopg2-binary==2.9.10  # Postgres driver (used when DATABASE_URL is postgresql://)
 
