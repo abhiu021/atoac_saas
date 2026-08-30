@@ -767,3 +767,7 @@ tr:last-child td { border-bottom: 0; }
   .neg-chat-col { min-height: 420px; }
   .neg-agent-col { border-left: 0; border-top: 1px solid var(--line); }
 }
+
+/* Product-card negotiation-mode chip */
+.chip.chip-ai { color: var(--accent-d); background: var(--accent-soft); font-weight: 700; }
+.chip.chip-manual { color: var(--muted); background: var(--panel3); font-weight: 700; }

@@ -107,6 +107,7 @@ class ProductIn(BaseModel):
     delivery_days: int = Field(default=7, ge=0)
     strategy: str = "balanced"
     atoac_enabled: bool = True
+    auto_negotiate: bool = True
 
     @field_validator("strategy")
     @classmethod
@@ -664,7 +665,10 @@ def start_negotiation(body: StartNegotiationIn, db: Session = Depends(get_db),
         raise HTTPException(404, "Product not available for negotiation")
     neg = neg_engine.start(db, buyer, product, body.quantity, body.target_price,
                            body.max_delivery_days,
-                           buyer_control="HUMAN" if body.pause_agent else "AGENT")
+                           buyer_control="HUMAN" if body.pause_agent else "AGENT",
+                           # Respect the merchant's per-product setting: manual sellers
+                           # negotiate every deal themselves (agent won't auto-respond).
+                           merchant_control="AGENT" if product.auto_negotiate else "HUMAN")
     return neg_engine.state_dict(db, neg) | {"your_role": "buyer"}
 
 
@@ -987,7 +991,8 @@ def _product_dto(p: Product, owner: bool = False) -> dict:
     if owner:  # private policy fields returned ONLY to the owning merchant (§6.1)
         dto.update({"floor_price": p.floor_price, "max_discount_pct": p.max_discount_pct,
                     "max_negotiation_rounds": p.max_negotiation_rounds,
-                    "strategy": p.strategy or "balanced"})
+                    "strategy": p.strategy or "balanced",
+                    "auto_negotiate": bool(p.auto_negotiate)})
     return dto
 
 

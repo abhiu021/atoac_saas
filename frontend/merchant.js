@@ -244,6 +244,7 @@ function prodCard(p) {
         <span class="muted">negotiable</span><span>List <strong>${inr(p.list_price)}</strong></span></div>
     </div>
     <div class="chips">
+      <span class="chip ${p.auto_negotiate === false ? "chip-manual" : "chip-ai"}">${p.auto_negotiate === false ? "✋ Manual" : "🤖 AI auto"}</span>
       <span class="chip strat strat-${p.strategy || "balanced"}">${STRAT_LABEL[p.strategy] || "Balanced"}</span>
       <span class="chip">≤ ${p.max_discount_pct}% off</span>
       <span class="chip">min ${p.min_order_qty}</span>
@@ -498,6 +499,7 @@ function productBody() {
     delivery_days: parseInt($("p_deliv").value, 10),
     strategy: $("p_strategy").value,
     atoac_enabled: $("p_atoac").checked,
+    auto_negotiate: $("p_autoneg").checked,
   };
 }
 
@@ -524,6 +526,7 @@ function editProduct(id) {
   $("p_disc").value = p.max_discount_pct; $("p_minq").value = p.min_order_qty;
   $("p_rounds").value = p.max_negotiation_rounds; $("p_stock").value = p.stock;
   $("p_deliv").value = p.delivery_days; $("p_atoac").checked = p.atoac_enabled;
+  $("p_autoneg").checked = p.auto_negotiate !== false;
   $("p_strategy").value = p.strategy || "balanced";
   $("prodFormTitle").textContent = "Edit " + p.name;
   $("cancelEdit").classList.remove("hidden");
@@ -534,7 +537,7 @@ $("cancelEdit").onclick = resetForm;
 function resetForm() {
   editId = null;
   ["p_name", "p_desc", "p_list", "p_floor"].forEach(id => $(id).value = "");
-  $("p_atoac").checked = true; $("p_strategy").value = "balanced";
+  $("p_atoac").checked = true; $("p_autoneg").checked = true; $("p_strategy").value = "balanced";
   $("prodFormTitle").textContent = "Add product";
   $("cancelEdit").classList.add("hidden");
   notice($("prodMsg"), "");

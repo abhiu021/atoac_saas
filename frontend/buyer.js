@@ -386,21 +386,21 @@ async function doSearch(auto) {
           <span class="cm stock ${inStock ? "ok" : "low"}">${inStock ? "In stock" : `${c.stock} left`}</span>
         </div>
       </div>
-      <button class="ok sm" onclick="pickCandidate(${i})">Negotiate</button>
+      <button class="ok sm" onclick="pickCandidate(${i})" title="Negotiate this merchant yourself">✋ Negotiate myself</button>
     </div>`;
   }).join("");
   S.phase = "merchants";
   const selBtn = many
-    ? `<button class="ok sm" id="negSelBtn" style="margin:0 0 10px" onclick="negotiateSelected()">⚡ Negotiate with selected (${data.candidates.length})</button>`
+    ? `<button class="ok sm" id="negSelBtn" style="margin:0 0 10px" onclick="negotiateSelected()">🤖 Let my agent negotiate &amp; compare (${data.candidates.length})</button>`
     : "";
   assistant(`I found <strong>${data.candidates.length}</strong> merchant(s):<div class="rich">${selBtn}${cards}</div>
-    ${many ? "Tick the ones you want and tap <strong>Negotiate with selected</strong> to compare — or pick one." : "Tap <strong>Negotiate</strong> to start."}`,
+    <div class="faint small" style="margin-top:6px">${many ? "<strong>✋ Negotiate myself</strong> = you make the offers with one merchant · <strong>🤖 Let my agent</strong> = your agent haggles them all and picks the best." : "Tap <strong>✋ Negotiate myself</strong> to make the offers, or say “let my agent do it”."}</div>`,
     `Found ${data.candidates.length} merchant(s): ${data.candidates.map(c => esc(c.merchant_name)).join(", ")}.`);
 }
 
 window.updateSelCount = () => {
   const n = document.querySelectorAll(".cand-check:checked").length;
-  const b = $("negSelBtn"); if (b) b.textContent = `⚡ Negotiate with selected (${n})`;
+  const b = $("negSelBtn"); if (b) b.textContent = `🤖 Let my agent negotiate & compare (${n})`;
 };
 window.negotiateSelected = () => {
   const sel = [...document.querySelectorAll(".cand-check:checked")].map(c => S.candidates[+c.dataset.i]);

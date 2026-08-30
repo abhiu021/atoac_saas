@@ -40,7 +40,8 @@ def init_db():
 # Lightweight additive migration: add new columns to existing SQLite tables so a
 # model change doesn't require dropping the DB. (A full solution would use Alembic.)
 _ADDED_COLUMNS = {
-    "products": {"strategy": "VARCHAR DEFAULT 'balanced'"},
+    "products": {"strategy": "VARCHAR DEFAULT 'balanced'",
+                 "auto_negotiate": "BOOLEAN DEFAULT 1"},
     "agreements": {"basket_id": "INTEGER"},
 }
 

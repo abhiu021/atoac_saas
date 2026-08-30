@@ -61,7 +61,10 @@ class Product(Base):
     # Fulfilment
     stock = Column(Integer, default=0)
     delivery_days = Column(Integer, default=7)
-    atoac_enabled = Column(Boolean, default=True)
+    atoac_enabled = Column(Boolean, default=True)   # discoverable by AI buyers
+    # When False, the AI sales agent does NOT auto-respond — new negotiations open
+    # with the merchant in HUMAN control, so the merchant negotiates each one itself.
+    auto_negotiate = Column(Boolean, default=True)
 
     created_at = Column(DateTime, default=_now)
 
