@@ -14,6 +14,7 @@ import analytics
 import discovery
 import intent
 import inventory
+import llm
 import negotiation as neg_engine
 import razorpay_client
 from audit import log_event, query_events
@@ -552,6 +553,14 @@ def buyer_intent(body: IntentIn, buyer: User = Depends(require_buyer)):
 def buyer_basket_intent(body: IntentIn, buyer: User = Depends(require_buyer)):
     """Parse a multi-item request into line items for a basket negotiation."""
     return {"lines": intent.parse_basket(body.message)}
+
+
+@app.post("/api/buyer/ask")
+def buyer_ask(body: IntentIn, buyer: User = Depends(require_buyer)):
+    """Free-form Q&A: answer general/off-topic questions conversationally (LLM when
+    enabled, safe template otherwise). Never quotes live prices/stock — those come
+    from real negotiation, so the guardrail is untouched."""
+    return {"answer": llm.assistant_answer(body.message)}
 
 
 class BasketCheckoutIn(BaseModel):

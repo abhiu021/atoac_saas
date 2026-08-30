@@ -178,6 +178,26 @@ async function onSend() {
   await concierge(text);
 }
 
+// Is this a general/off-topic question rather than a buying request?
+function looksLikeQuestion(low) {
+  const s = (low || "").trim();
+  if (/\?\s*$/.test(s)) return true;
+  return /^(what|whats|how|why|who|when|where|which|can you (tell|explain|help)|could you|tell me|explain|do you|does|is |are |should|help\b|hi\b|hello|hey|thanks|thank you)/.test(s);
+}
+function hasBuyingSignal(low) {
+  return /\d/.test(low) || /\b(buy|need|want|order|source|purchase|procure|find me|looking for|get me|rfq|quote|reorder)\b/.test(low);
+}
+
+// Free-form Q&A — the assistant answers general questions conversationally.
+async function askAssistant(text) {
+  typing(true);
+  let res;
+  try { res = await api("/api/buyer/ask", { method: "POST", body: { message: text } }); }
+  catch (e) { typing(false); assistant("Sorry, I couldn't answer that just now — but tell me what you'd like to buy and I'll get to work."); return; }
+  typing(false);
+  assistant(esc(res.answer || "").replace(/\n/g, "<br>"), res.answer || "");
+}
+
 // ---- Concierge (discovery + orchestration) ----
 async function concierge(text) {
   const low = text.toLowerCase();
@@ -204,12 +224,15 @@ async function concierge(text) {
       return negotiateAll(S.candidates);
     const pick = matchCandidate(low);
     if (pick) return startNeg(pick);
-    if (!/\d/.test(low) && !/(chair|mat|desk|product|item)/.test(low)) {
+    if (!/\d/.test(low) && !/(chair|mat|desk|product|item)/.test(low) && !looksLikeQuestion(low)) {
       assistant(`Say “negotiate all” to compare them, name a merchant, or describe a new request.`); return;
     }
     // otherwise fall through and re-parse as a fresh/updated request
   }
   if (S.phase === "done") S.rfq = { query: null, quantity: null, target_price: null, max_delivery_days: null };
+
+  // General/off-topic question (not a buying request)? Answer it conversationally.
+  if (looksLikeQuestion(low) && !hasBuyingSignal(low)) return askAssistant(text);
 
   // Multi-item? If the message names ≥2 distinct line items, negotiate each line
   // in parallel and check them out as one basket. Single-item falls through below.
@@ -386,7 +409,10 @@ async function doSearch(auto) {
           <span class="cm stock ${inStock ? "ok" : "low"}">${inStock ? "In stock" : `${c.stock} left`}</span>
         </div>
       </div>
-      <button class="ok sm" onclick="pickCandidate(${i})" title="Negotiate this merchant yourself">✋ Negotiate myself</button>
+      <div class="cand-actions">
+        <button class="ghost sm" onclick="pickCandidate(${i})" title="You make the offers">✋ Myself</button>
+        <button class="ok sm" onclick="agentOne(${i})" title="Let your agent negotiate this one">🤖 Agent</button>
+      </div>
     </div>`;
   }).join("");
   S.phase = "merchants";
@@ -394,7 +420,7 @@ async function doSearch(auto) {
     ? `<button class="ok sm" id="negSelBtn" style="margin:0 0 10px" onclick="negotiateSelected()">🤖 Let my agent negotiate &amp; compare (${data.candidates.length})</button>`
     : "";
   assistant(`I found <strong>${data.candidates.length}</strong> merchant(s):<div class="rich">${selBtn}${cards}</div>
-    <div class="faint small" style="margin-top:6px">${many ? "<strong>✋ Negotiate myself</strong> = you make the offers with one merchant · <strong>🤖 Let my agent</strong> = your agent haggles them all and picks the best." : "Tap <strong>✋ Negotiate myself</strong> to make the offers, or say “let my agent do it”."}</div>`,
+    <div class="faint small" style="margin-top:6px">Per merchant: <strong>✋ Myself</strong> = you make the offers · <strong>🤖 Agent</strong> = your agent negotiates it.${many ? " Or tick several and tap <strong>🤖 Let my agent negotiate &amp; compare</strong> above." : ""}</div>`,
     `Found ${data.candidates.length} merchant(s): ${data.candidates.map(c => esc(c.merchant_name)).join(", ")}.`);
 }
 
@@ -421,6 +447,7 @@ function matchCandidate(low) {
   return null;
 }
 window.pickCandidate = (i) => startNeg(S.candidates[i]);
+window.agentOne = (i) => negotiateAll([S.candidates[i]]);  // let the agent negotiate one merchant
 window.negotiateAllNow = () => negotiateAll(S.candidates);
 
 // ---- Multi-merchant: negotiate all in parallel, compare, recommend ----

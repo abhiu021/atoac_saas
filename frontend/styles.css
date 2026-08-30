@@ -771,3 +771,8 @@ tr:last-child td { border-bottom: 0; }
 /* Product-card negotiation-mode chip */
 .chip.chip-ai { color: var(--accent-d); background: var(--accent-soft); font-weight: 700; }
 .chip.chip-manual { color: var(--muted); background: var(--panel3); font-weight: 700; }
+
+/* Candidate card: two negotiation options (human / agent) */
+.cand-actions { display: flex; flex-direction: column; gap: 6px; flex: 0 0 auto; }
+.cand-actions button { white-space: nowrap; }
+@media (max-width: 520px) { .cand-actions { flex-direction: row; } }
