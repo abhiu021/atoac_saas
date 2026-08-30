@@ -1,0 +1,14 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.db
+*.db-wal
+*.db-shm
+.env
+.git/
+.gitignore
+.pytest_cache/
+scratchpad/
+*.log

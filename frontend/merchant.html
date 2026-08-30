@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ATOAC — Merchant Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand"><span class="brand-mark" role="img" aria-label="ATOAC"></span></div>
+      <nav class="nav" id="nav">
+        <div class="nav-sec">Console</div>
+        <div class="nav-item active" data-view="overview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/></svg>
+          Overview</div>
+        <div class="nav-item" data-view="negotiations">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          Negotiations<span class="count" id="navNegCount"></span></div>
+        <div class="nav-item" data-view="catalog">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="M3.27 6.96 12 12.01l8.73-5.05M12 22.08V12"/></svg>
+          Catalog &amp; policies<span class="count" id="navPolicyCount"></span></div>
+        <div class="nav-item" data-view="orders">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 2h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2V3a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h6"/></svg>
+          Orders</div>
+        <div class="nav-item" data-view="analytics">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M3 3v18h18"/><path d="M18 17V9M13 17V5M8 17v-3"/></svg>
+          Analytics</div>
+        <div class="nav-item" data-view="activity">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>
+          Activity</div>
+      </nav>
+      <div class="sidebar-foot">
+        <div class="avatar" id="avatar">M</div>
+        <div class="id"><div class="n" id="bizName">Merchant</div><div class="e" id="who"></div></div>
+        <button class="ghost sm" style="margin-left:auto" onclick="logout()">Exit</button>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div><div class="page-title" id="pageTitle">Overview</div><div class="page-sub" id="pageSub">Your AI sales performance at a glance</div></div>
+        <button class="ghost sm" onclick="refresh()">↻ Refresh</button>
+      </div>
+
+      <div class="content">
+        <!-- OVERVIEW -->
+        <section class="view active" id="view-overview">
+          <div class="kpis" id="stats"></div>
+          <div class="grid2" style="margin-top:18px">
+            <div class="card"><h2>Close rate</h2><div class="sub">Agreed vs. all negotiations</div><div id="donut" class="donut-wrap"></div></div>
+            <div class="card"><h2>Outcomes</h2><div class="sub">Where negotiations land</div><div id="outcomes"></div></div>
+          </div>
+          <div class="card">
+            <h2>Closing price trend</h2>
+            <div class="sub">Recent agreed unit prices, in order — see how negotiated prices are moving.</div>
+            <div id="priceTrend"></div>
+          </div>
+          <div class="card" style="margin-top:0">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg> Revenue opportunities</h2>
+            <div class="sub">AI-suggested actions with estimated impact — rule-based, from your own data.</div>
+            <div id="recos"></div>
+          </div>
+        </section>
+
+        <!-- NEGOTIATIONS -->
+        <section class="view" id="view-negotiations">
+          <div class="neg-console">
+            <aside class="neg-list-col">
+              <div class="neg-list-head">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:16px;height:16px"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                Conversations
+              </div>
+              <div id="negList" class="neg-list"></div>
+            </aside>
+            <div class="neg-chat-col">
+              <div id="merchantChatPanel" class="chat-panel neg-chat"></div>
+              <div id="negEmpty" class="neg-empty">Select a negotiation to open the conversation.</div>
+            </div>
+            <aside class="neg-agent-col">
+              <div id="negAgent" class="neg-agent">
+                <div class="ag-head"><span class="ag-spark">✦</span> Deal Agent</div>
+                <div class="faint small" style="margin-top:8px">Open a negotiation and I'll summarize the buyer's requirements and what's pending — live.</div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- CATALOG -->
+        <section class="view" id="view-catalog">
+          <div class="card hidden" id="policyCard">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Pending policy changes</h2>
+            <div class="sub">Material pricing/policy edits need approval before taking effect. Negotiations keep
+              using the current approved policy until you approve.</div>
+            <div id="policyList"></div>
+          </div>
+
+          <div class="card">
+            <div class="section-title"><h2 id="prodFormTitle">Add product</h2>
+              <button class="ghost sm hidden" id="cancelEdit">Cancel edit</button></div>
+            <div id="prodMsg"></div>
+            <div class="pform">
+              <div class="span2"><label>Product name</label><input id="p_name" placeholder="e.g. Ergonomic Office Chair" /></div>
+              <div class="span2"><label>Description</label><input id="p_desc" placeholder="Short description" /></div>
+
+              <div class="fsec">Pricing</div>
+              <div><label>List price (₹)</label><input id="p_list" type="number" placeholder="4600" /></div>
+              <div><label>Floor price (₹)</label><input id="p_floor" type="number" placeholder="4200" />
+                <div class="fhint">Never sold below this</div></div>
+
+              <div class="fsec">Negotiation policy</div>
+              <div><label>Max discount %</label><input id="p_disc" type="number" value="10" /></div>
+              <div><label>Min order qty</label><input id="p_minq" type="number" value="1" /></div>
+              <div><label>Max rounds</label><input id="p_rounds" type="number" value="3" /></div>
+              <div class="span2"><label>Strategy <span class="faint">— how the agent concedes</span></label>
+                <select id="p_strategy">
+                  <option value="balanced">Balanced — steady, fair concessions</option>
+                  <option value="aggressive">Aggressive — win the deal (concede faster)</option>
+                  <option value="firm">Hold firm — protect margin (concede slower)</option>
+                  <option value="clear_stock">Clear stock — move inventory fast</option>
+                </select></div>
+
+              <div class="fsec">Fulfilment</div>
+              <div><label>Stock</label><input id="p_stock" type="number" value="100" /></div>
+              <div><label>Delivery days</label><input id="p_deliv" type="number" value="7" /></div>
+              <div class="span2 atoac-field">
+                <label>Discoverable by AI buyers</label>
+                <label class="switch"><input id="p_atoac" type="checkbox" checked /><span class="slider"></span>
+                  <span class="switch-label">ATOAC enabled</span></label>
+              </div>
+            </div>
+
+            <div style="margin-top:20px"><button id="saveProd">Save product</button></div>
+          </div>
+
+          <div class="card">
+            <h2>Products</h2>
+            <div class="sub">Your catalog with its private pricing policy. Floor prices never leave this page.</div>
+            <div id="prodGrid" class="prod-grid"></div>
+          </div>
+
+          <div class="card">
+            <h2>Upsell rules</h2>
+            <div class="sub">Offer a complementary product when the negotiated quantity hits a threshold.</div>
+            <div class="rule-builder">
+              <div class="rb-field"><label>When buying</label><select id="u_base"></select></div>
+              <div class="rb-qty"><label>≥ Qty</label><input id="u_qty" type="number" value="30" /></div>
+              <div class="rb-arrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+              <div class="rb-field"><label>Offer</label><select id="u_up"></select></div>
+              <button id="addRule">Add rule</button>
+            </div>
+            <div id="ruleList" class="rule-list" style="margin-top:16px"></div>
+          </div>
+        </section>
+
+        <!-- ORDERS -->
+        <section class="view" id="view-orders">
+          <div class="card">
+            <div class="section-title">
+              <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 2h6a1 1 0 0 1 1 1v1h2a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1h2V3a1 1 0 0 1 1-1z"/><path d="M9 12h6M9 16h6"/></svg> Orders</h2>
+              <button class="ghost sm" onclick="exportOrders()">⬇ Export CSV</button>
+            </div>
+            <div class="sub">Every agreement and its payment status.</div>
+            <div class="tbl-wrap"><table id="orderTable"></table></div>
+          </div>
+        </section>
+
+        <!-- ANALYTICS -->
+        <section class="view" id="view-analytics">
+          <div class="grid2">
+            <div class="card"><h2>Negotiation intelligence</h2><div id="negIntel"></div></div>
+            <div class="card"><h2>Upsell intelligence</h2><div id="upsellIntel"></div></div>
+          </div>
+          <div class="card">
+            <h2>Recent negotiations</h2>
+            <div class="tbl-wrap"><table id="recentNegs"></table></div>
+          </div>
+        </section>
+
+        <!-- ACTIVITY -->
+        <section class="view" id="view-activity">
+          <div class="card">
+            <h2><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg> Audit trail</h2>
+            <div class="sub">Every material action — negotiations, agreements, payments, policy changes.</div>
+            <div class="feed" id="audit"></div>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+
+  <script src="/auth.js"></script>
+  <script src="/chat.js"></script>
+  <script src="/merchant.js"></script>
+</body>
+</html>

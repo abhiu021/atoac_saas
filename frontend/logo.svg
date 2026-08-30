@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-3 -3 496 106" fill="none" role="img" aria-label="ATOAC">
+  <!-- A (notched apex + triangular counter) -->
+  <path fill="currentColor" fill-rule="evenodd" d="M0,100 L28,0 L39,20 L50,0 L78,100 Z M39,36 L23,86 L55,86 Z"/>
+  <!-- T -->
+  <path fill="currentColor" transform="translate(94,0)" d="M0,0 L70,0 L70,22 L46,22 L46,100 L24,100 L24,22 L0,22 Z"/>
+  <!-- O -->
+  <circle cx="230" cy="50" r="39" stroke="currentColor" stroke-width="22"/>
+  <!-- A -->
+  <path fill="currentColor" fill-rule="evenodd" transform="translate(296,0)" d="M0,100 L28,0 L39,20 L50,0 L78,100 Z M39,36 L23,86 L55,86 Z"/>
+  <!-- C (ring open on the right) -->
+  <path stroke="currentColor" stroke-width="22" stroke-linecap="butt" d="M471.9,27.6 A39,39 0 1 0 471.9,72.4"/>
+</svg>

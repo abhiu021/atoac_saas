@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>ATOAC — Buyer</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body class="chat-body">
+  <div class="app">
+    <aside class="sidebar chat-sidebar">
+      <div class="brand"><span class="brand-mark" role="img" aria-label="ATOAC"></span></div>
+      <button id="newChat" class="ok" style="width:100%; margin-bottom:6px">＋ New chat</button>
+      <div class="nav-sec">Recent chats</div>
+      <div id="chatList" class="chat-list"></div>
+      <div class="sidebar-foot">
+        <div class="avatar" id="bavatar">B</div>
+        <div class="id"><div class="n">Buyer</div><div class="e" id="who"></div></div>
+      </div>
+      <div style="display:flex; gap:6px; margin-top:8px">
+        <button class="ghost sm" style="flex:1" onclick="showOrders()">Orders</button>
+        <button class="ghost sm" style="flex:1" onclick="logout()">Log out</button>
+      </div>
+    </aside>
+
+    <main class="main convo-main">
+      <div class="page-head" style="justify-content:center">
+        <div class="steps" id="steps" style="margin:0">
+          <div class="step active" data-step="1"><span class="n">1</span><span class="lbl">Request</span></div>
+          <div class="step" data-step="2"><span class="n">2</span><span class="lbl">Negotiate</span></div>
+          <div class="step" data-step="3"><span class="n">3</span><span class="lbl">Agreement</span></div>
+          <div class="step" data-step="4"><span class="n">4</span><span class="lbl">Payment</span></div>
+        </div>
+      </div>
+      <div class="thread" id="thread"><div class="thread-inner" id="threadInner"></div></div>
+      <div class="assist-bar" id="assistBar">
+        <span class="turn-hint" id="turnHint"></span>
+        <button class="ghost sm assist-toggle" id="assistToggle" style="display:none"></button>
+      </div>
+      <div class="composer-wrap">
+        <div class="composer">
+          <div class="composer-box">
+            <textarea id="composer" rows="1"
+              placeholder="Describe what you want to buy — e.g. “50 ergonomic chairs under ₹4,300 each”"></textarea>
+            <button id="send">Send</button>
+          </div>
+          <div class="composer-hint small">Enter to send · Shift + Enter for a new line</div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="/auth.js"></script>
+  <script src="/buyer.js"></script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Log in · ATOAC</title>
+  <link rel="icon" href="/logo.svg" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="auth-wrap">
+    <div class="auth-brand">
+      <a href="/" class="brand"><span class="brand-mark" role="img" aria-label="ATOAC"></span></a>
+      <h1>The merchant-side AI sales layer for agentic commerce.</h1>
+      <p>AI buyers can already find and buy. ATOAC gives every merchant an AI sales agent that
+        negotiates within its own limits, upsells, and settles through Razorpay — with a human able
+        to step in at any moment.</p>
+      <div class="auth-points">
+        <div class="pt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>
+          Live agent-to-agent negotiation you can watch and take over.</div>
+        <div class="pt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>
+          Deterministic guardrail — no deal ever breaches your floor price.</div>
+        <div class="pt"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M20 6 9 17l-5-5"/></svg>
+          Upsell, bounded agreements, and Razorpay checkout, end to end.</div>
+      </div>
+    </div>
+
+    <div class="auth-form">
+      <div class="auth-card">
+        <div style="margin-bottom:14px">
+          <a href="/" class="back-home">← Home</a>
+        </div>
+        <h2 id="formTitle">Welcome back</h2>
+        <div class="lead">Log in to your ATOAC account.</div>
+        <div id="msg"></div>
+        <div id="roleWrap" class="hidden">
+          <label>I am a</label>
+          <select id="role">
+            <option value="buyer">Buyer</option>
+            <option value="merchant">Merchant</option>
+          </select>
+        </div>
+        <div id="bizWrap" class="hidden">
+          <label>Business name</label>
+          <input id="business_name" placeholder="e.g. WorkSpace Direct" />
+        </div>
+        <label>Email</label>
+        <input id="email" type="email" placeholder="you@example.com" />
+        <label>Password</label>
+        <input id="password" type="password" placeholder="••••••••" />
+        <div style="margin-top:18px; display:flex; gap:10px; align-items:center">
+          <button id="submitBtn">Log in</button>
+          <button class="ghost" id="toggleBtn">Create account</button>
+        </div>
+
+        <div class="demo-box">
+          <h3 style="margin-bottom:2px">Demo accounts</h3>
+          <div class="small faint" style="margin-bottom:8px; text-transform:none; letter-spacing:0">All passwords: <code>password123</code></div>
+          <div class="drow"><span class="muted">Buyer</span><span>buyer@test.com</span></div>
+          <div class="drow"><span class="muted">Merchant A</span><span>a@comfortseating.com</span></div>
+          <div class="drow"><span class="muted">Merchant B</span><span>b@workspacedirect.com</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="/auth.js"></script>
+</body>
+</html>

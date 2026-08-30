@@ -1,0 +1,19 @@
+# Secrets & local env
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.venv/
+venv/
+
+# Local database
+*.db
+*.db-wal
+*.db-shm
+
+# Scratch / logs
+scratchpad/
+*.log

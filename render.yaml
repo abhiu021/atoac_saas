@@ -1,0 +1,24 @@
+# Render blueprint. Push this repo to GitHub, then in Render:
+# New + → Blueprint → pick the repo. Set GEMINI_API_KEY when prompted.
+services:
+  - type: web
+    name: atoac
+    runtime: docker
+    plan: free            # free web services support WebSockets (they sleep when idle)
+    healthCheckPath: /
+    envVars:
+      - key: JWT_SECRET
+        generateValue: true          # Render generates a strong secret
+      - key: GEMINI_API_KEY
+        sync: false                  # set in the dashboard (kept out of git)
+      - key: GEMINI_MODEL
+        value: gemini-3.5-flash
+      - key: SEED_ON_START
+        value: "1"
+      # Razorpay left in mock mode until you add test keys (step 3):
+      # - key: RAZORPAY_KEY_ID
+      #   sync: false
+      # - key: RAZORPAY_KEY_SECRET
+      #   sync: false
+      # - key: RAZORPAY_WEBHOOK_SECRET
+      #   sync: false
