@@ -1,21 +1,11 @@
 // Product Detail Page
 const requireRole = (role) => {
-  try {
-    const token = localStorage.getItem("atoac_token");
-    if (!token) {
-      window.location.href = "/login.html";
-      return null;
-    }
-    const decoded = JSON.parse(atob(token.split(".")[1]));
-    if (decoded.role !== role) {
-      window.location.href = "/login.html";
-      return null;
-    }
-    return decoded;
-  } catch {
+  const sessionUser = typeof getUser === "function" ? getUser() : null;
+  if (!sessionUser || sessionUser.role !== role) {
     window.location.href = "/login.html";
     return null;
   }
+  return sessionUser;
 };
 
 const user = requireRole("buyer");
