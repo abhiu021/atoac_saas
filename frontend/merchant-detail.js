@@ -1,7 +1,7 @@
 // Merchant Detail Page
 const requireRole = (role) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("atoac_token");
     if (!token) {
       window.location.href = "/login.html";
       return null;
@@ -179,7 +179,7 @@ window.viewProductDetail = (prodId, prodName) => {
 
 // Helper function for API calls
 async function api(path, opts = {}) {
-  const token = localStorage.getItem("token");
+  const token = localStorage.getItem("atoac_token");
   const res = await fetch(path, {
     ...opts,
     headers: {

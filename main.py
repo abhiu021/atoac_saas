@@ -712,6 +712,41 @@ def buyer_search(query: str, quantity: int = 1, max_delivery_days: int | None = 
     return {"query": query, "candidates": out}
 
 
+@app.get("/api/products/{product_id}")
+def public_product(product_id: int, db: Session = Depends(get_db),
+                   buyer: User = Depends(require_buyer)):
+    product = db.get(Product, product_id)
+    if not product or not product.atoac_enabled:
+        raise HTTPException(404, "Product not found")
+    merchant = db.get(User, product.merchant_id)
+    dto = _product_dto(product)
+    dto.update({"merchant_name": merchant.business_name or "Merchant",
+                "merchant_email": merchant.email})
+    return dto
+
+
+@app.get("/api/merchants/{merchant_id}")
+def public_merchant(merchant_id: int, db: Session = Depends(get_db),
+                    buyer: User = Depends(require_buyer)):
+    merchant = db.get(User, merchant_id)
+    if not merchant or merchant.role != "merchant":
+        raise HTTPException(404, "Merchant not found")
+    products = db.query(Product).filter(Product.merchant_id == merchant.id,
+                                        Product.atoac_enabled.is_(True)).all()
+    return {"id": merchant.id, "business_name": merchant.business_name or "Merchant",
+            "email": merchant.email, "product_count": len(products)}
+
+
+@app.get("/api/merchants/{merchant_id}/products")
+def public_merchant_products(merchant_id: int, db: Session = Depends(get_db),
+                             buyer: User = Depends(require_buyer)):
+    merchant = db.get(User, merchant_id)
+    if not merchant or merchant.role != "merchant":
+        raise HTTPException(404, "Merchant not found")
+    return [_product_dto(product) for product in db.query(Product).filter(
+        Product.merchant_id == merchant_id, Product.atoac_enabled.is_(True)).all()]
+
+
 @app.post("/api/negotiations/start")
 def start_negotiation(body: StartNegotiationIn, db: Session = Depends(get_db),
                       buyer: User = Depends(require_buyer)):
@@ -1042,7 +1077,7 @@ def _product_dto(p: Product, owner: bool = False) -> dict:
     dto = {"id": p.id, "merchant_id": p.merchant_id, "name": p.name,
            "description": p.description, "list_price": p.list_price, "stock": p.stock,
            "delivery_days": p.delivery_days, "min_order_qty": p.min_order_qty,
-           "atoac_enabled": p.atoac_enabled}
+           "atoac_enabled": p.atoac_enabled, "image_url": p.image_url}
     if owner:  # private policy fields returned ONLY to the owning merchant (§6.1)
         dto.update({"floor_price": p.floor_price, "max_discount_pct": p.max_discount_pct,
                     "max_negotiation_rounds": p.max_negotiation_rounds,
