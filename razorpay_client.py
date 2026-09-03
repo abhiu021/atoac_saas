@@ -48,7 +48,12 @@ def create_payment_link(amount: float, agreement_uid: str, buyer_email: str) -> 
         json=payload,
         timeout=15.0,
     )
-    resp.raise_for_status()
+    if resp.is_error:
+        try:
+            detail = resp.json().get("error", {}).get("description")
+        except ValueError:
+            detail = None
+        raise RuntimeError(detail or f"Razorpay API returned HTTP {resp.status_code}")
     data = resp.json()
     return {
         "mode": "live",

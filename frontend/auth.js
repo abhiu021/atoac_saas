@@ -22,7 +22,7 @@ async function api(path, { method = "GET", body } = {}) {
   if (!res.ok) {
     const detail = typeof data.detail === "string" ? data.detail
       : Array.isArray(data.detail) ? data.detail.map(d => d.msg).join(", ")
-      : "Request failed";
+      : `Request failed (${res.status})`;
     throw new Error(detail);
   }
   return data;

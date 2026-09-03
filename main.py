@@ -907,7 +907,10 @@ def _do_checkout(db, buyer, agr) -> dict:
         if shortfall is not None:
             return shortfall
     # Amount is computed from the agreement total — NEVER from the client (§14).
-    link = razorpay_client.create_payment_link(agr.total, agr.uid, buyer.email)
+    try:
+        link = razorpay_client.create_payment_link(agr.total, agr.uid, buyer.email)
+    except RuntimeError as e:
+        raise HTTPException(502, f"Razorpay checkout failed: {e}") from e
     payment = Payment(agreement_id=agr.id, razorpay_id=link["razorpay_id"],
                       amount=agr.total, payment_link=link["payment_link"], status="PENDING")
     db.add(payment)
