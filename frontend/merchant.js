@@ -68,7 +68,7 @@ function connectNotifications() {
   ws.onmessage = (e) => {
     let n; try { n = JSON.parse(e.data); } catch { return; }
     if (n.type !== "notification") return;
-    toast("🔔 " + n.text, n.kind === "closed" ? "ok" : "");
+    toast("Notification: " + n.text, n.kind === "closed" ? "ok" : "");
     loadNegotiations();  // refresh table + live badge
     if (n.kind !== "new") loadOrders();
   };
@@ -162,16 +162,16 @@ function renderAgentPanel(st) {
   if (prod.floor_price != null) pts.push(["Your floor (private)", inr(prod.floor_price) + "/u"]);
 
   let pending;
-  if (st.status === "AGREED") pending = `✅ Deal reached at <strong>${inr(st.final_unit_price)}/unit</strong> — ${inr(st.total)} total. The buyer will complete checkout.`;
-  else if (st.status === "DENIED") pending = `❌ Closed with no deal — ${esc((reasonLabel(st.reason_code) || "").toLowerCase())}.`;
-  else if (st.waiting_for === "merchant") pending = `⏳ Your turn — counter, accept, or reject in the chat.`;
-  else if (st.merchant_control === "HUMAN") pending = `✋ You're at the table. Waiting for the buyer to respond.`;
-  else pending = `🤖 Your sales agent is negotiating automatically — it will never breach your floor.`;
+  if (st.status === "AGREED") pending = `Deal reached at <strong>${inr(st.final_unit_price)}/unit</strong> — ${inr(st.total)} total. The buyer will complete checkout.`;
+  else if (st.status === "DENIED") pending = `Closed with no deal — ${esc((reasonLabel(st.reason_code) || "").toLowerCase())}.`;
+  else if (st.waiting_for === "merchant") pending = `Your turn — counter, accept, or reject in the chat.`;
+  else if (st.merchant_control === "HUMAN") pending = `You're at the table. Waiting for the buyer to respond.`;
+  else pending = `Your sales agent is negotiating automatically — it will never breach your floor.`;
 
   const cta = st.status !== "NEGOTIATING" ? ""
     : st.merchant_control === "HUMAN"
-      ? `<div class="ag-actions"><button class="ghost sm" onclick="negAct('resume')">🤖 Let agent handle</button></div>`
-      : `<div class="ag-actions"><button class="warn-btn sm" onclick="negAct('pause')">✋ Take over</button></div>`;
+      ? `<div class="ag-actions"><button class="ghost sm" onclick="negAct('resume')">Let Agent Handle</button></div>`
+      : `<div class="ag-actions"><button class="warn-btn sm" onclick="negAct('pause')">Take Over</button></div>`;
 
   host.innerHTML = `
     <div class="ag-head"><span class="ag-spark">✦</span> Deal Agent</div>
@@ -244,7 +244,7 @@ function prodCard(p) {
         <span class="muted">negotiable</span><span>List <strong>${inr(p.list_price)}</strong></span></div>
     </div>
     <div class="chips">
-      <span class="chip ${p.auto_negotiate === false ? "chip-manual" : "chip-ai"}">${p.auto_negotiate === false ? "✋ Manual" : "🤖 AI auto"}</span>
+      <span class="chip ${p.auto_negotiate === false ? "chip-manual" : "chip-ai"}">${p.auto_negotiate === false ? "Manual" : "AI Auto"}</span>
       <span class="chip strat strat-${p.strategy || "balanced"}">${STRAT_LABEL[p.strategy] || "Balanced"}</span>
       <span class="chip">≤ ${p.max_discount_pct}% off</span>
       <span class="chip">min ${p.min_order_qty}</span>

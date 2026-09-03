@@ -62,7 +62,7 @@ function row(kind, avatar, name, html, storeHtml) {
 }
 const assistant = (html, storeHtml) => row("assistant", "A", "ATOAC", html, storeHtml);
 const buyerMsg = (html) => row("user", "You", "", html);
-const merchantMsg = (name, html) => row("merchant", "🏬", esc(name), html);
+const merchantMsg = (name, html) => row("merchant", "M", esc(name), html);
 function systemChip(text) {
   const d = document.createElement("div"); d.className = "sys-chip"; d.textContent = text;
   thread.appendChild(d); scroll();
@@ -277,9 +277,9 @@ function showAiActions() {
   steps.push({ ic: "✓", label: "Ready to source" });
 
   const actions = [
-    { icon: "⚡", title: "Auto-run sourcing", sub: "Find merchants, negotiate all, and recommend the best", fn: "aiAuto" },
-    { icon: "📋", title: "Clarify requirements", sub: "Answer a few quick questions — quantity, budget, delivery", fn: "aiGuided" },
-    { icon: "🔍", title: "Just find merchants", sub: "See who's available and negotiate them yourself", fn: "aiFind" },
+    { icon: "→", title: "Auto-run sourcing", sub: "Find merchants, negotiate all, and recommend the best", fn: "aiAuto" },
+    { icon: "→", title: "Clarify requirements", sub: "Answer a few quick questions — quantity, budget, delivery", fn: "aiGuided" },
+    { icon: "→", title: "Just find merchants", sub: "See who's available and negotiate them yourself", fn: "aiFind" },
   ].map(r => `<button class="ai-action" onclick="${r.fn}()">
       <span class="ai-a-ic">${r.icon}</span>
       <span class="ai-a-txt"><span class="ai-a-t">${r.title}</span><span class="ai-a-s">${r.sub}</span></span>
@@ -287,17 +287,17 @@ function showAiActions() {
 
   S.phase = "actions";
   assistant(
-    `<div class="ai-head"><span class="ai-spark">✦</span> AI Mode</div>
+    `<div class="ai-head"><span class="ai-spark">✦</span> Next Steps</div>
      ${aiTraceHtml(steps)}
-     <div class="ai-lead">These can go straight into sourcing for <strong>${esc(q.query)}</strong>${q.quantity ? ` × ${q.quantity}` : ""} — or tell me more. Pick one:</div>
+     <div class="ai-lead">For <strong>${esc(q.query)}</strong>${q.quantity ? ` × ${q.quantity}` : ""} — choose an option:</div>
      <div class="ai-actions">${actions}</div>`,
-    `AI Mode — understood “${esc(q.query)}”. Offered: auto-run sourcing, clarify requirements, or find merchants.`);
+    `Ready to source "${esc(q.query)}". Choose: auto-run sourcing, clarify requirements, or find merchants.`);
 }
 
 // Quantity is essential for search/negotiation; target is optional (defaults to ~10% off cheapest list).
 function needClarify() { return S.rfq.quantity == null; }
-window.aiAuto = () => { if (needClarify()) return startGuided("auto"); buyerMsg("⚡ Auto-run sourcing"); doSearch(true); };
-window.aiFind = () => { if (needClarify()) return startGuided("find"); buyerMsg("🔍 Find merchants"); doSearch(false); };
+window.aiAuto = () => { if (needClarify()) return startGuided("auto"); buyerMsg("Starting auto-run sourcing..."); doSearch(true); };
+window.aiFind = () => { if (needClarify()) return startGuided("find"); buyerMsg("Finding merchants..."); doSearch(false); };
 window.aiGuided = () => startGuided(null);
 
 // ---- Guided requirement collection: one stepped question card at a time. ----
@@ -394,45 +394,72 @@ async function doSearch(auto) {
   const qty = S.rfq.quantity || 1;
   const cards = data.candidates.map((c, i) => {
     const inStock = c.stock >= qty;
+    const cardId = `candidate-${i}`;
     return `
-    <div class="cand">
+    <div class="cand" id="${cardId}">
       ${many ? `<input type="checkbox" class="cand-check" data-i="${i}" checked onchange="updateSelCount()" title="Include in comparison">` : ""}
       ${prodThumb(c.name)}
       <div class="cand-info">
-        <div class="cand-prod">${esc(c.name)}</div>
-        <div class="cand-merch">${esc(c.merchant_name)} <span class="cand-verified">✓ Verified</span></div>
+        <div class="cand-prod" onclick="viewProductDetail('${c.id || i}', ${i})" style="cursor: pointer; color: var(--accent);">
+          ${esc(c.name)} →
+        </div>
+        <div class="cand-merch" onclick="viewMerchantDetail('${c.merchant_id || c.merchant_name}', ${i})" style="cursor: pointer; color: var(--accent);">
+          ${esc(c.merchant_name)} <span class="cand-verified">✓ Verified</span>
+        </div>
         ${c.description ? `<div class="cand-desc">${esc(c.description)}</div>` : ""}
         <div class="cand-meta">
           <span class="cm"><b>${inr(c.list_price)}</b> list</span>
-          <span class="cm">🚚 ${c.delivery_days}d</span>
+          <span class="cm">Delivery: ${c.delivery_days}d</span>
           <span class="cm">MOQ ${c.min_order_qty}</span>
           <span class="cm stock ${inStock ? "ok" : "low"}">${inStock ? "In stock" : `${c.stock} left`}</span>
         </div>
       </div>
       <div class="cand-actions">
-        <button class="ghost sm" onclick="pickCandidate(${i})" title="You make the offers">✋ Myself</button>
-        <button class="ok sm" onclick="agentOne(${i})" title="Let your agent negotiate this one">🤖 Agent</button>
+        <button class="ghost sm" onclick="pickCandidate(${i})" title="You make the offers">My Offer</button>
+        <button class="ok sm" onclick="agentOne(${i})" title="Let your agent negotiate this one">Agent Negotiate</button>
       </div>
     </div>`;
   }).join("");
   S.phase = "merchants";
   const selBtn = many
-    ? `<button class="ok sm" id="negSelBtn" style="margin:0 0 10px" onclick="negotiateSelected()">🤖 Let my agent negotiate &amp; compare (${data.candidates.length})</button>`
+    ? `<button class="ok sm" id="negSelBtn" style="margin:0 0 10px" onclick="negotiateSelected()">Compare Selected Merchants (${data.candidates.length})</button>`
     : "";
-  assistant(`I found <strong>${data.candidates.length}</strong> merchant(s):<div class="rich">${selBtn}${cards}</div>
-    <div class="faint small" style="margin-top:6px">Per merchant: <strong>✋ Myself</strong> = you make the offers · <strong>🤖 Agent</strong> = your agent negotiates it.${many ? " Or tick several and tap <strong>🤖 Let my agent negotiate &amp; compare</strong> above." : ""}</div>`,
+  assistant(`I found <strong>${data.candidates.length}</strong> merchant(s) with matching products:<div class="rich">${selBtn}${cards}</div>
+    <div class="faint small" style="margin-top:6px">Per merchant: <strong>My Offer</strong> = you negotiate directly · <strong>Agent Negotiate</strong> = AI agent handles it.${many ? " Or select several and tap <strong>Compare</strong> above." : " Click product/merchant name to see full details."}</div>`,
     `Found ${data.candidates.length} merchant(s): ${data.candidates.map(c => esc(c.merchant_name)).join(", ")}.`);
 }
 
 window.updateSelCount = () => {
   const n = document.querySelectorAll(".cand-check:checked").length;
-  const b = $("negSelBtn"); if (b) b.textContent = `🤖 Let my agent negotiate & compare (${n})`;
+  const b = $("negSelBtn"); if (b) b.textContent = `Compare Selected Merchants (${n})`;
 };
 window.negotiateSelected = () => {
   const sel = [...document.querySelectorAll(".cand-check:checked")].map(c => S.candidates[+c.dataset.i]);
   if (!sel.length) return toast("Tick at least one merchant.", "err");
   if (sel.length === 1) return startNeg(sel[0]);
   negotiateAll(sel);
+};
+
+// Navigate to product detail page
+window.viewProductDetail = (productId, index) => {
+  const product = S.candidates[index];
+  if (!product) return toast("Product not found", "err");
+  const data = encodeURIComponent(JSON.stringify(product));
+  window.location.href = `/product-detail.html?id=${encodeURIComponent(productId)}&data=${data}`;
+};
+
+// Navigate to merchant detail page
+window.viewMerchantDetail = (merchantId, index) => {
+  const product = S.candidates[index];
+  if (!product) return toast("Merchant not found", "err");
+  const merchantData = {
+    id: merchantId,
+    name: product.merchant_name,
+    business_name: product.merchant_name,
+    email: product.merchant_email || "contact@atoac.com"
+  };
+  const data = encodeURIComponent(JSON.stringify(merchantData));
+  window.location.href = `/merchant-detail.html?id=${encodeURIComponent(merchantId)}&data=${data}`;
 };
 
 function matchCandidate(low) {
@@ -500,7 +527,7 @@ function renderBoard(M) {
   const cta = M.winner
     ? `<div class="sb-cta"><button class="ok sm" onclick="proceedWithWinner()">Go with ${esc(M.states[M.winner].cand.merchant_name)} · ${inr(M.states[M.winner].st.total)}</button></div>`
     : "";
-  return `<div class="scoreboard"><div class="sb-head">⚡ Negotiating with ${M.total} merchant(s) in parallel · tap a row to see the chat</div>${rows}${cta}</div>`;
+  return `<div class="scoreboard"><div class="sb-head">Negotiating with ${M.total} merchant(s) in parallel · tap a row to see the chat</div>${rows}${cta}</div>`;
 }
 
 function sbTranscript(x) {
@@ -790,7 +817,7 @@ function updateAssist(st) {
   if (!st || st.status !== "NEGOTIATING") { btn.style.display = "none"; return; }
   const agentDriving = st.buyer_control === "AGENT";
   btn.style.display = "";
-  btn.textContent = agentDriving ? "✋ Take over" : "🤖 Let agent negotiate";
+  btn.textContent = agentDriving ? "Take Over" : "Agent Negotiate";
   btn.onclick = () => {
     if (S.ws && S.ws.readyState === 1)
       S.ws.send(JSON.stringify({ type: "control", mode: agentDriving ? "HUMAN" : "AGENT" }));

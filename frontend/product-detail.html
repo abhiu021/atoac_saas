@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product Details — ATOAC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .detail-container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .detail-header button { background: transparent; border: 1px solid var(--line2); color: var(--text); padding: 8px 14px; }
+    .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-bottom: 32px; }
+    .product-image { width: 100%; aspect-ratio: 1; border-radius: var(--radius); background: var(--panel2); border: 1px solid var(--line2); 
+      display: flex; align-items: center; justify-content: center; font-size: 120px; }
+    .detail-info h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; letter-spacing: -.4px; }
+    .merchant-badge { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; background: var(--accent-soft); 
+      color: var(--accent); border-radius: 6px; margin-bottom: 16px; font-size: 14px; font-weight: 600; }
+    .price-section { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .price-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line2); }
+    .price-row:last-child { border-bottom: 0; }
+    .price-row .label { color: var(--muted); font-size: 14px; }
+    .price-row .value { font-size: 18px; font-weight: 700; color: var(--text); }
+    .specs-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 24px; }
+    .spec-card { background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius-sm); padding: 16px; }
+    .spec-card .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; margin-bottom: 6px; }
+    .spec-card .value { font-size: 16px; font-weight: 700; }
+    .action-buttons { display: flex; gap: 12px; margin-bottom: 24px; }
+    .action-buttons button { flex: 1; }
+    .description-section { background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius); padding: 20px; margin-bottom: 24px; }
+    .description-section h3 { font-size: 14px; font-weight: 700; margin: 0 0 12px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+    .description-section p { margin: 0; color: var(--text); line-height: 1.6; }
+    @media (max-width: 900px) { .detail-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="chat-body">
+  <div class="detail-container">
+    <div class="detail-header">
+      <button class="ghost" onclick="history.back()">← Back</button>
+      <h1 style="margin: 0; flex: 1;" id="pageTitle">Product Details</h1>
+    </div>
+
+    <div class="detail-grid">
+      <div>
+        <div class="product-image" id="productImage">📦</div>
+      </div>
+      <div class="detail-info">
+        <div class="merchant-badge">
+          <span>📍 Seller:</span>
+          <strong id="merchantName">—</strong>
+        </div>
+        <h1 id="productName">Loading...</h1>
+        <p id="productDesc" style="color: var(--muted); margin: 12px 0; line-height: 1.6;"></p>
+
+        <div class="price-section">
+          <div class="price-row">
+            <span class="label">List Price</span>
+            <span class="value" id="listPrice">₹—</span>
+          </div>
+          <div class="price-row">
+            <span class="label">Minimum Order Qty</span>
+            <span class="value" id="moq">—</span>
+          </div>
+          <div class="price-row">
+            <span class="label">Stock Available</span>
+            <span class="value" id="stock">—</span>
+          </div>
+          <div class="price-row">
+            <span class="label">Delivery Time</span>
+            <span class="value" id="delivery">— days</span>
+          </div>
+        </div>
+
+        <div class="specs-grid">
+          <div class="spec-card">
+            <div class="label">Category</div>
+            <div class="value" id="category">—</div>
+          </div>
+          <div class="spec-card">
+            <div class="label">Verification</div>
+            <div class="value" id="verified" style="color: var(--green);">✓ Verified</div>
+          </div>
+          <div class="spec-card">
+            <div class="label">Product ID</div>
+            <div class="value" style="font-size: 12px; font-family: monospace;" id="productId">—</div>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="ok" onclick="negotiateNow()">Negotiate Price</button>
+          <button class="ghost" onclick="contactMerchant()">Contact Seller</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="description-section">
+      <h3>Product Details</h3>
+      <p id="fullDescription">Loading complete product information...</p>
+    </div>
+
+    <div class="description-section" id="merchantSection">
+      <h3>About This Seller</h3>
+      <div id="merchantDetails">
+        <p><strong id="merchantBusinessName">—</strong></p>
+        <p id="merchantEmail" style="color: var(--muted); margin-top: 6px;">—</p>
+      </div>
+      <button class="ghost" onclick="viewMerchantProfile()" style="margin-top: 16px;">View Full Merchant Profile →</button>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="/auth.js"></script>
+  <script src="/product-detail.js"></script>
+</body>
+</html>

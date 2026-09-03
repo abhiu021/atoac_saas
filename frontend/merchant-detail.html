@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Merchant Profile — ATOAC</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+  <style>
+    .detail-container { max-width: 1200px; margin: 0 auto; padding: 24px; }
+    .detail-header { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+    .detail-header button { background: transparent; border: 1px solid var(--line2); color: var(--text); padding: 8px 14px; }
+    .merchant-hero { background: linear-gradient(135deg, var(--accent-soft), var(--panel2)); border: 1px solid var(--line2); 
+      border-radius: var(--radius); padding: 32px; margin-bottom: 28px; display: flex; align-items: center; gap: 24px; }
+    .merchant-avatar { width: 100px; height: 100px; border-radius: 12px; background: linear-gradient(135deg, var(--accent), var(--violet)); 
+      color: #fff; display: flex; align-items: center; justify-content: center; font-size: 48px; font-weight: 700; flex: 0 0 auto; }
+    .merchant-info h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
+    .merchant-info .subtitle { color: var(--muted); font-size: 14px; margin-bottom: 12px; }
+    .badge-row { display: flex; gap: 8px; flex-wrap: wrap; }
+    .badge { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; background: var(--green-soft); 
+      color: var(--green); border-radius: 999px; font-size: 12px; font-weight: 600; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius-sm); padding: 18px; }
+    .stat-card .label { color: var(--muted); font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .4px; }
+    .stat-card .value { font-size: 24px; font-weight: 700; margin-top: 6px; }
+    .section { background: var(--panel); border: 1px solid var(--line2); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+    .section h3 { font-size: 14px; font-weight: 700; margin: 0 0 16px; text-transform: uppercase; letter-spacing: .4px; color: var(--muted); }
+    .section p { margin: 0 0 8px; color: var(--text); line-height: 1.6; }
+    .section p:last-child { margin: 0; }
+    .products-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; margin-top: 16px; }
+    .product-item { background: var(--panel2); border: 1px solid var(--line2); border-radius: var(--radius-sm); 
+      padding: 12px; cursor: pointer; transition: border-color .12s, box-shadow .12s; }
+    .product-item:hover { border-color: var(--line3); box-shadow: var(--shadow); }
+    .product-item .img { width: 100%; aspect-ratio: 1; background: var(--panel); border-radius: 8px; 
+      display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 8px; }
+    .product-item .name { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .product-item .price { color: var(--accent); font-weight: 700; font-size: 14px; margin-top: 4px; }
+    .action-buttons { display: flex; gap: 12px; margin-bottom: 24px; }
+    .action-buttons button { flex: 1; }
+    @media (max-width: 900px) { .merchant-hero { flex-direction: column; text-align: center; } .stats-grid { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="chat-body">
+  <div class="detail-container">
+    <div class="detail-header">
+      <button class="ghost" onclick="history.back()">← Back</button>
+      <h1 style="margin: 0; flex: 1;" id="pageTitle">Merchant Profile</h1>
+    </div>
+
+    <div class="merchant-hero">
+      <div class="merchant-avatar" id="merchantAvatar">M</div>
+      <div class="merchant-info">
+        <h1 id="merchantName">Loading...</h1>
+        <p class="subtitle" id="merchantEmail">—</p>
+        <div class="badge-row">
+          <span class="badge">✓ Verified Seller</span>
+          <span class="badge" style="background: var(--accent-soft); color: var(--accent);">Active</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-buttons">
+      <button class="ok" onclick="negotiateWithMerchant()">Browse & Negotiate</button>
+      <button class="ghost" onclick="contactMerchant()">Send Message</button>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Products</div>
+        <div class="value" id="productCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Total Deals</div>
+        <div class="value" id="dealCount">0</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Avg. Delivery</div>
+        <div class="value" id="avgDelivery">— days</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Completion Rate</div>
+        <div class="value" id="completionRate">—</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>About This Merchant</h3>
+      <p id="merchantDescription">Professional merchant offering quality products with verified credentials and proven track record on ATOAC platform.</p>
+    </div>
+
+    <div class="section" id="productsSection">
+      <h3>Featured Products</h3>
+      <div class="products-grid" id="productsGrid">
+        <div style="padding: 20px; text-align: center; color: var(--muted); grid-column: 1 / -1;">Loading products...</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Shipping & Delivery</h3>
+      <p><strong>Average Delivery Time:</strong> <span id="deliveryInfo">— days</span></p>
+      <p><strong>Shipping Locations:</strong> PAN India</p>
+      <p><strong>Payment Methods:</strong> Bank Transfer, Razorpay, Credit/Debit Card</p>
+    </div>
+
+    <div class="section">
+      <h3>Contact Information</h3>
+      <p><strong>Email:</strong> <span id="contactEmail">—</span></p>
+      <p><strong>Status:</strong> <span style="color: var(--green); font-weight: 700;">Online & Available</span></p>
+      <button class="ok" style="width: 100%; margin-top: 16px;" onclick="contactMerchant()">Send Inquiry</button>
+    </div>
+  </div>
+
+  <div class="toasts" id="toasts"></div>
+  <script src="/auth.js"></script>
+  <script src="/merchant-detail.js"></script>
+</body>
+</html>
