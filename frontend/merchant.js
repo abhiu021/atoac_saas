@@ -489,7 +489,7 @@ async function loadAudit() {
 }
 
 function productBody() {
-  return {
+  const body = {
     name: $("p_name").value.trim(),
     description: $("p_desc").value.trim(),
     list_price: parseFloat($("p_list").value),
@@ -503,6 +503,18 @@ function productBody() {
     atoac_enabled: $("p_atoac").checked,
     auto_negotiate: $("p_autoneg").checked,
   };
+  if (!body.name) throw new Error("Product name is required");
+  if (!Number.isFinite(body.list_price) || !Number.isFinite(body.floor_price)) {
+    throw new Error("Enter valid list and floor prices");
+  }
+  if (body.floor_price > body.list_price) {
+    throw new Error("Floor price cannot exceed list price");
+  }
+  if (![body.max_discount_pct, body.min_order_qty, body.max_negotiation_rounds,
+        body.stock, body.delivery_days].every(Number.isFinite)) {
+    throw new Error("Enter valid product quantities and delivery days");
+  }
+  return body;
 }
 
 $("saveProd").onclick = async () => {
@@ -514,9 +526,11 @@ $("saveProd").onclick = async () => {
     else resp = await api("/api/merchant/products", { method: "POST", body });
     const queued = resp && resp.pending_policy_change;
     resetForm();
-    await refresh();
-    if (queued) notice($("prodMsg"),
-      "Material policy change queued — approve it below to take effect.", "ok");
+    notice($("prodMsg"), queued
+      ? "Material policy change queued — approve it below to take effect."
+      : "Product saved.", "ok");
+    try { await refresh(); }
+    catch (e) { toast("Product saved, but the catalog could not refresh: " + e.message, "err"); }
   } catch (e) { notice($("prodMsg"), e.message); }
 };
 

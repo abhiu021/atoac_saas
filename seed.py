@@ -21,23 +21,41 @@ def seed():
     init_db()
     db = SessionLocal()
     try:
-        if db.query(User).filter(User.email == "buyer@test.com").first():
-            print("Seed data already present — skipping.")
-            return
-
-        # Create merchants
-        m_a = User(email="a@comfortseating.com", password_hash=hash_password(PASSWORD),
-                   role="merchant", business_name="Comfort Seating")
-        m_b = User(email="b@workspacedirect.com", password_hash=hash_password(PASSWORD),
-                   role="merchant", business_name="WorkSpace Direct")
-        m_c = User(email="c@officeplus.com", password_hash=hash_password(PASSWORD),
-                   role="merchant", business_name="Office Plus")
-        m_d = User(email="d@techsupplies.com", password_hash=hash_password(PASSWORD),
-                   role="merchant", business_name="Tech Supplies")
-        buyer = User(email="buyer@test.com", password_hash=hash_password(PASSWORD),
-                     role="buyer", business_name=None)
-        db.add_all([m_a, m_b, m_c, m_d, buyer])
+        # Reuse existing demo accounts so an older deployment can be upgraded.
+        account_data = [
+            ("a@comfortseating.com", "Comfort Seating"),
+            ("b@workspacedirect.com", "WorkSpace Direct"),
+            ("c@officeplus.com", "Office Plus"),
+            ("d@techsupplies.com", "Tech Supplies"),
+        ]
+        merchants = {}
+        for email, business_name in account_data:
+            merchant = db.query(User).filter(User.email == email).first()
+            if not merchant:
+                merchant = User(email=email, password_hash=hash_password(PASSWORD),
+                                role="merchant", business_name=business_name)
+                db.add(merchant)
+            merchants[email] = merchant
+        buyer = db.query(User).filter(User.email == "buyer@test.com").first()
+        if not buyer:
+            db.add(User(email="buyer@test.com", password_hash=hash_password(PASSWORD),
+                        role="buyer", business_name=None))
         db.commit()
+        for merchant in merchants.values():
+            db.refresh(merchant)
+        m_a = merchants["a@comfortseating.com"]
+        m_b = merchants["b@workspacedirect.com"]
+        m_c = merchants["c@officeplus.com"]
+        m_d = merchants["d@techsupplies.com"]
+
+        def add_missing_products(catalog):
+            merchant_id = catalog[0].merchant_id
+            existing_names = {name for name, in db.query(Product.name).filter(
+                Product.merchant_id == merchant_id).all()}
+            missing = [p for p in catalog if p.name not in existing_names]
+            if missing:
+                db.add_all(missing)
+                db.commit()
 
         # MERCHANT A: COMFORT SEATING - Furniture Focus
         products_a = [
@@ -102,8 +120,7 @@ def seed():
                     stock=100, delivery_days=5, strategy="balanced",
                     image_url="https://via.placeholder.com/300x300?text=Monitor+Riser"),
         ]
-        db.add_all(products_a)
-        db.commit()
+        add_missing_products(products_a)
 
         # MERCHANT B: WORKSPACE DIRECT - Office Supplies & Furniture
         products_b = [
@@ -168,8 +185,7 @@ def seed():
                     stock=300, delivery_days=4, strategy="aggressive",
                     image_url="https://via.placeholder.com/300x300?text=Cushion"),
         ]
-        db.add_all(products_b)
-        db.commit()
+        add_missing_products(products_b)
 
         # MERCHANT C: OFFICE PLUS - General Office Equipment
         products_c = [
@@ -234,8 +250,7 @@ def seed():
                     stock=120, delivery_days=4, strategy="aggressive",
                     image_url="https://via.placeholder.com/300x300?text=Cleaning+Kit"),
         ]
-        db.add_all(products_c)
-        db.commit()
+        add_missing_products(products_c)
 
         # MERCHANT D: TECH SUPPLIES - IT Equipment & Cables
         products_d = [
@@ -300,8 +315,7 @@ def seed():
                     stock=180, delivery_days=3, strategy="balanced",
                     image_url="https://via.placeholder.com/300x300?text=Webcam"),
         ]
-        db.add_all(products_d)
-        db.commit()
+        add_missing_products(products_d)
 
         # Add upsell rules
         # Rule: When buying 30+ office chairs, offer desk mat
