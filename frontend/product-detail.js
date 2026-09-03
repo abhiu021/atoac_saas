@@ -91,7 +91,7 @@ function renderProductDetails(product) {
   // Image
   const imageContainer = $("productImage");
   if (product.image_url) {
-    imageContainer.innerHTML = `<img src="${product.image_url}" alt="${esc(product.name)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">`;
+    imageContainer.innerHTML = `<img src="${product.image_url}" alt="" data-product-name="${esc(product.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-missing');this.parentElement.textContent=getProductIcon(this.dataset.productName);" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">`;
   } else {
     const icon = getProductIcon(product.name);
     const tint = getTintColor(product.name);

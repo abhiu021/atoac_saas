@@ -376,6 +376,7 @@ tr:last-child td { border-bottom: 0; }
 .cand:first-child { margin-top: 2px; }
 .cand-thumb { width: 54px; height: 54px; border-radius: 10px; flex: 0 0 auto; display: grid; place-items: center;
   font-size: 26px; border: 1px solid var(--line2); }
+.image-missing { font-size: 32px !important; color: var(--muted); text-align: center; padding: 6px; }
 .cand-info { flex: 1; min-width: 0; }
 .cand-prod { font-weight: 700; font-size: 13.5px; letter-spacing: -.1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
   color: var(--accent); transition: opacity .12s; }

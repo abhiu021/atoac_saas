@@ -139,7 +139,7 @@ function renderProducts() {
 
   grid.innerHTML = merchantProducts.map(p => {
     const imageHtml = p.image_url 
-      ? `<img src="${p.image_url}" alt="${esc(p.name)}" style="width: 100%; height: 100%; object-fit: cover;">`
+      ? `<img src="${p.image_url}" alt="" data-product-name="${esc(p.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-missing');this.parentElement.textContent=getProductIcon(this.dataset.productName);" style="width: 100%; height: 100%; object-fit: cover;">`
       : `<div style="width: 100%; height: 100%; background: ${getTintColor(p.name)}; display: flex; align-items: center; justify-content: center; font-size: 24px;">${getProductIcon(p.name)}</div>`;
     return `
       <div class="product-item" onclick="viewProductDetail('${p.id || p.product_id}', '${esc(p.name)}')">

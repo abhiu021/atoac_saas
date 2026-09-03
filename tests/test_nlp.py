@@ -28,6 +28,14 @@ def test_tokenized_search_matches_natural_phrase(client, buyer):
     assert "WorkSpace Direct" in names and "Comfort Seating" in names
 
 
+def test_chair_search_excludes_chair_accessories(client, buyer):
+    r = client.get("/api/buyer/search?query=chairs&quantity=1&max_delivery_days=7",
+                   headers=buyer)
+    names = [c["name"].lower() for c in r.json()["candidates"]]
+    assert names and all("mat" not in name and "cushion" not in name and "pad" not in name
+                         for name in names)
+
+
 def test_say_natural_language_accept_closes_deal(client, buyer, merchant_b):
     pid = product_id(client, merchant_b)
     set_stock(client, merchant_b, pid, 200)

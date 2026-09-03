@@ -227,7 +227,7 @@ function prodCard(p) {
   const eff = Math.max(p.floor_price, p.list_price * (1 - p.max_discount_pct / 100));
   const floorPct = Math.max(4, Math.min(100, eff / p.list_price * 100));
   const low = p.stock < 20;
-  const imageHtml = p.image_url ? `<img src="${p.image_url}" alt="${esc(p.name)}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">` : `<div style="width: 100%; height: 120px; background: var(--panel2); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--faint);">No image</div>`;
+  const imageHtml = p.image_url ? `<img src="${p.image_url}" alt="" data-product-name="${esc(p.name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-missing');this.parentElement.textContent=prodIcon(this.dataset.productName);" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">` : `<div style="width: 100%; height: 120px; background: var(--panel2); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--faint);">No image</div>`;
   return `<div class="prod-card">
     ${imageHtml}
     <div class="prod-head">

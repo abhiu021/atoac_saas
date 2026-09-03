@@ -14,16 +14,30 @@ def _tokens(query: str) -> list[str]:
 
 
 def search_products(db: Session, query: str) -> list[Product]:
-    """Cross-merchant search: any content token appearing in name or description."""
+    """Search product names first, using descriptions only as a fallback.
+
+    This prevents an accessory such as ``Desk Chair Mat`` from crowding out
+    actual chairs when the buyer asks specifically for chairs.
+    """
     tokens = _tokens(query)
     if not tokens:
         return []
-    out = []
+    name_matches = []
+    description_matches = []
     for p in db.query(Product).all():
+        name_tokens = _tokens(p.name)
+        if all(token in name_tokens for token in tokens):
+            # A chair search means the item itself should be a chair, not a
+            # chair-related accessory whose name ends in mat, cushion, or pad.
+            if "chair" in tokens and any(token in name_tokens for token in
+                                         ("mat", "cushion", "pad")):
+                continue
+            name_matches.append(p)
+            continue
         hay = (p.name + " " + (p.description or "")).lower()
-        if any(tok in hay for tok in tokens):
-            out.append(p)
-    return out
+        if any(token in hay for token in tokens):
+            description_matches.append(p)
+    return name_matches or description_matches
 
 
 def filter_and_rank(products: list[Product], quantity: int, max_delivery_days: int | None) -> list[Product]:

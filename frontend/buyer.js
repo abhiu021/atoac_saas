@@ -34,7 +34,7 @@ function prodThumb(product) {
   const imageUrl = isObject ? product.image_url : null;
   
   if (imageUrl) {
-    return `<div class="cand-thumb" style="border: 1px solid var(--line2);"><img src="${imageUrl}" alt="${esc(name)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`;
+    return `<div class="cand-thumb" style="border: 1px solid var(--line2);"><img src="${imageUrl}" alt="" data-product-name="${esc(name)}" onerror="this.onerror=null;this.style.display='none';this.parentElement.classList.add('image-missing');this.parentElement.textContent=prodIcon(this.dataset.productName);" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`;
   }
   
   let h = 0; for (const ch of name || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
