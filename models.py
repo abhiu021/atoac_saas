@@ -65,6 +65,9 @@ class Product(Base):
     # When False, the AI sales agent does NOT auto-respond — new negotiations open
     # with the merchant in HUMAN control, so the merchant negotiates each one itself.
     auto_negotiate = Column(Boolean, default=True)
+    
+    # Product image
+    image_url = Column(String, nullable=True)  # URL to product image
 
     created_at = Column(DateTime, default=_now)
 

@@ -106,6 +106,13 @@
             <div class="pform">
               <div class="span2"><label>Product name</label><input id="p_name" placeholder="e.g. Ergonomic Office Chair" /></div>
               <div class="span2"><label>Description</label><input id="p_desc" placeholder="Short description" /></div>
+              <div class="span2"><label>Product Image</label>
+                <div style="display: flex; gap: 8px; align-items: flex-start;">
+                  <input id="p_image" type="file" accept="image/*" style="flex: 1;" />
+                  <button class="ghost sm" id="uploadImageBtn" type="button" onclick="uploadProductImage()" style="white-space: nowrap;">Upload</button>
+                </div>
+                <div id="imagePreviewContainer" style="margin-top: 8px;"></div>
+              </div>
 
               <div class="fsec">Pricing</div>
               <div><label>List price (₹)</label><input id="p_list" type="number" placeholder="4600" /></div>

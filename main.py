@@ -5,7 +5,7 @@ import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
-from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect
+from fastapi import Depends, FastAPI, HTTPException, Request, WebSocket, WebSocketDisconnect, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, EmailStr, Field, field_validator
 from sqlalchemy.orm import Session
@@ -245,6 +245,52 @@ def update_product(product_id: int, body: ProductIn, db: Session = Depends(get_d
     dto = _product_dto(p, owner=True)
     dto["pending_policy_change"] = pending
     return dto
+
+
+@app.post("/api/merchant/products/{product_id}/image")
+async def upload_product_image(product_id: int, file: UploadFile = File(...), 
+                               db: Session = Depends(get_db),
+                               merchant: User = Depends(require_merchant)):
+    """Upload an image for a product. Stores as base64 data URL or file path."""
+    p = db.get(Product, product_id)
+    if not p:
+        raise HTTPException(404, "Product not found")
+    if p.merchant_id != merchant.id:
+        raise HTTPException(403, "Not your product")
+    
+    # Validate file type
+    allowed_types = {"image/jpeg", "image/png", "image/gif", "image/webp"}
+    if file.content_type not in allowed_types:
+        raise HTTPException(400, f"File type not allowed. Allowed: {', '.join(allowed_types)}")
+    
+    # Validate file size (max 5MB)
+    file_size = (await file.read()).__sizeof__()
+    await file.seek(0)
+    if file_size > 5 * 1024 * 1024:
+        raise HTTPException(400, "File size exceeds 5MB limit")
+    
+    # Store as base64 data URL (simple approach, suitable for prototyping)
+    import base64
+    file_content = await file.read()
+    base64_content = base64.b64encode(file_content).decode('utf-8')
+    image_url = f"data:{file.content_type};base64,{base64_content}"
+    
+    # Alternative: store in /uploads directory and use URL path
+    # (uncomment to use file-based storage instead)
+    # os.makedirs("frontend/uploads", exist_ok=True)
+    # filename = f"{product_id}_{int(datetime.now(timezone.utc).timestamp())}.{file.filename.split('.')[-1]}"
+    # filepath = f"frontend/uploads/{filename}"
+    # with open(filepath, "wb") as f:
+    #     f.write(file_content)
+    # image_url = f"/uploads/{filename}"
+    
+    p.image_url = image_url
+    db.commit()
+    
+    log_event(db, actor=merchant.business_name or merchant.email, action="product.image_upload",
+              details={"product_id": p.id, "product_name": p.name}, merchant_id=merchant.id)
+    
+    return {"success": True, "image_url": image_url}
 
 
 @app.get("/api/merchant/policy-changes")

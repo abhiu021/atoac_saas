@@ -227,7 +227,9 @@ function prodCard(p) {
   const eff = Math.max(p.floor_price, p.list_price * (1 - p.max_discount_pct / 100));
   const floorPct = Math.max(4, Math.min(100, eff / p.list_price * 100));
   const low = p.stock < 20;
+  const imageHtml = p.image_url ? `<img src="${p.image_url}" alt="${esc(p.name)}" style="width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 12px;">` : `<div style="width: 100%; height: 120px; background: var(--panel2); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px; color: var(--faint);">No image</div>`;
   return `<div class="prod-card">
+    ${imageHtml}
     <div class="prod-head">
       <div style="min-width:0">
         <div class="prod-name">${esc(p.name)}</div>
@@ -548,6 +550,43 @@ async function deleteProduct(id) {
   try { await api(`/api/merchant/products/${id}`, { method: "DELETE" }); await refresh(); }
   catch (e) { toast(e.message, "err"); }
 }
+
+window.uploadProductImage = async () => {
+  const fileInput = $("p_image");
+  const file = fileInput.files[0];
+  if (!file) return toast("Please select an image file", "err");
+  if (!editId) return toast("Please save the product first before uploading an image", "err");
+  
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    
+    const response = await fetch(`/api/merchant/products/${editId}/image`, {
+      method: "POST",
+      headers: { "Authorization": `Bearer ${getToken()}` },
+      body: formData
+    });
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Image upload failed");
+    }
+    
+    const result = await response.json();
+    
+    // Show preview
+    const preview = $("imagePreviewContainer");
+    preview.innerHTML = `<img src="${result.image_url}" style="max-width: 150px; max-height: 150px; border-radius: 8px; border: 1px solid var(--line2);">`;
+    
+    // Clear file input
+    fileInput.value = "";
+    
+    toast("Image uploaded successfully", "ok");
+    await refresh();
+  } catch (e) {
+    toast(e.message, "err");
+  }
+};
 
 $("addRule").onclick = async () => {
   try {

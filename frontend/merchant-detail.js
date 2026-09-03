@@ -138,11 +138,12 @@ function renderProducts() {
   }
 
   grid.innerHTML = merchantProducts.map(p => {
-    const icon = getProductIcon(p.name);
-    const tint = getTintColor(p.name);
+    const imageHtml = p.image_url 
+      ? `<img src="${p.image_url}" alt="${esc(p.name)}" style="width: 100%; height: 100%; object-fit: cover;">`
+      : `<div style="width: 100%; height: 100%; background: ${getTintColor(p.name)}; display: flex; align-items: center; justify-content: center; font-size: 24px;">${getProductIcon(p.name)}</div>`;
     return `
       <div class="product-item" onclick="viewProductDetail('${p.id || p.product_id}', '${esc(p.name)}')">
-        <div class="img" style="background: ${tint};">${icon}</div>
+        <div class="img">${imageHtml}</div>
         <div class="name">${esc(p.name)}</div>
         <div class="price">${inr(p.list_price)}</div>
       </div>

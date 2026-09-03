@@ -89,10 +89,15 @@ function renderProductDetails(product) {
   $("productDesc").textContent = product.description || "";
 
   // Image
-  const icon = getProductIcon(product.name);
-  const tint = getTintColor(product.name);
-  $("productImage").style.background = tint;
-  $("productImage").textContent = icon;
+  const imageContainer = $("productImage");
+  if (product.image_url) {
+    imageContainer.innerHTML = `<img src="${product.image_url}" alt="${esc(product.name)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: var(--radius);">`;
+  } else {
+    const icon = getProductIcon(product.name);
+    const tint = getTintColor(product.name);
+    imageContainer.style.background = tint;
+    imageContainer.textContent = icon;
+  }
 
   // Pricing
   $("listPrice").textContent = inr(product.list_price);

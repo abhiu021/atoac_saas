@@ -27,7 +27,16 @@ function prodIcon(name) {
   for (const [re, ic] of PROD_ICONS) if (re.test(s)) return ic;
   return "📦";
 }
-function prodThumb(name) {
+function prodThumb(product) {
+  // product can be either a string (name) or an object with image_url
+  const isObject = typeof product === 'object';
+  const name = isObject ? product.name : product;
+  const imageUrl = isObject ? product.image_url : null;
+  
+  if (imageUrl) {
+    return `<div class="cand-thumb" style="border: 1px solid var(--line2);"><img src="${imageUrl}" alt="${esc(name)}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;"></div>`;
+  }
+  
   let h = 0; for (const ch of name || "") h = (h * 31 + ch.charCodeAt(0)) >>> 0;
   return `<div class="cand-thumb" style="background:${THUMB_TINTS[h % THUMB_TINTS.length]}">${prodIcon(name)}</div>`;
 }
@@ -398,7 +407,7 @@ async function doSearch(auto) {
     return `
     <div class="cand" id="${cardId}">
       ${many ? `<input type="checkbox" class="cand-check" data-i="${i}" checked onchange="updateSelCount()" title="Include in comparison">` : ""}
-      ${prodThumb(c.name)}
+      ${prodThumb(c)}
       <div class="cand-info">
         <div class="cand-prod" onclick="viewProductDetail('${c.id || i}', ${i})" style="cursor: pointer; color: var(--accent);">
           ${esc(c.name)} →
