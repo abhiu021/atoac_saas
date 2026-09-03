@@ -45,6 +45,7 @@ _ADDED_COLUMNS = {
     "products": [
         ("strategy", {"sqlite": "VARCHAR DEFAULT 'balanced'", "postgresql": "VARCHAR DEFAULT 'balanced'"}),
         ("auto_negotiate", {"sqlite": "BOOLEAN DEFAULT 1", "postgresql": "BOOLEAN DEFAULT true"}),
+        ("image_url", {"sqlite": "TEXT", "postgresql": "TEXT"}),
     ],
     "agreements": [
         ("basket_id", {"sqlite": "INTEGER", "postgresql": "INTEGER"}),
