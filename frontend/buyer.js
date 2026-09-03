@@ -453,22 +453,14 @@ window.negotiateSelected = () => {
 window.viewProductDetail = (productId, index) => {
   const product = S.candidates[index];
   if (!product) return toast("Product not found", "err");
-  const data = encodeURIComponent(JSON.stringify(product));
-  window.location.href = `/product-detail.html?id=${encodeURIComponent(productId)}&data=${data}`;
+  window.location.href = `/product-detail.html?id=${encodeURIComponent(product.id || productId)}`;
 };
 
 // Navigate to merchant detail page
 window.viewMerchantDetail = (merchantId, index) => {
   const product = S.candidates[index];
   if (!product) return toast("Merchant not found", "err");
-  const merchantData = {
-    id: merchantId,
-    name: product.merchant_name,
-    business_name: product.merchant_name,
-    email: product.merchant_email || "contact@atoac.com"
-  };
-  const data = encodeURIComponent(JSON.stringify(merchantData));
-  window.location.href = `/merchant-detail.html?id=${encodeURIComponent(merchantId)}&data=${data}`;
+  window.location.href = `/merchant-detail.html?id=${encodeURIComponent(merchantId)}`;
 };
 
 function matchCandidate(low) {
