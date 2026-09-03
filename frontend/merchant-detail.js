@@ -1,13 +1,4 @@
 // Merchant Detail Page
-const requireRole = (role) => {
-  const sessionUser = typeof getUser === "function" ? getUser() : null;
-  if (!sessionUser || sessionUser.role !== role) {
-    window.location.href = "/login.html";
-    return null;
-  }
-  return sessionUser;
-};
-
 const user = requireRole("buyer");
 const $ = (id) => document.getElementById(id);
 const inr = (n) => n == null ? "—" : "₹" + Number(n).toLocaleString("en-IN");
