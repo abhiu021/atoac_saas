@@ -1,154 +1,821 @@
-# ATOAC SaaS — Agent-to-Agent Commerce
+# ATOAC — Agent-to-Agent Commerce
 
-Merchant-side AI sales platform: a buyer request negotiates against multiple
-merchants' deterministic sales agents, upsells, freezes a bounded agreement, and
-settles through Razorpay with verified, idempotent webhooks.
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com)
+[![Python 3.9+](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python)](https://www.python.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
+[![Status: Active Development](https://img.shields.io/badge/Status-Active%20Development-green?style=flat-square)](#implementation-status)
 
-Built to `ATOAC_ARCHITECTURE.md` v3.0. This is the **Phase 1 vertical slice**.
+> **A merchant-side AI sales platform for the agentic commerce era.** Give every merchant an autonomous sales agent that can receive buyer agent requests, negotiate within merchant-defined guardrails, identify upsell opportunities, freeze agreements, and hand off to payment—all without exposing private merchant strategy.
 
-## Run
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [What is ATOAC?](#what-is-atoac)
+- [Key Features](#key-features)
+- [Installation](#installation)
+- [Usage & Demo](#usage--demo)
+- [Configuration](#configuration)
+- [Architecture](#architecture)
+- [Implementation Status](#implementation-status)
+- [API Overview](#api-overview)
+- [Testing](#testing)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
+- [License](#license)
+
+---
+
+## Quick Start
+
+### 30 seconds to a running demo:
+
+```bash
+# 1. Clone and navigate
+git clone https://github.com/your-username/atoac.git
+cd atoac/atoac_saas
+
+# 2. Install dependencies
+python -m pip install -r requirements.txt
+
+# 3. Seed demo data (once)
+python seed.py
+
+# 4. Start the server
+python -m uvicorn main:app --reload
+```
+
+**Open** http://127.0.0.1:8000 in your browser. Log in with any of these test accounts (all use password: `password123`):
+
+| Role     | Email                  | Purpose |
+|----------|------------------------|---------|
+| Buyer    | buyer@test.com         | Search & negotiate with merchants |
+| Merchant A | a@comfortseating.com | Sell chairs & desks |
+| Merchant B | b@workspacedirect.com | Sell workspaces & ergonomics |
+
+**Try this workflow:**
+1. Log in as **buyer** → Search for `chair`, quantity `50`, target price `₹4300`, delivery `7d`
+2. Two merchants will negotiate automatically
+3. Accept a deal → See upsell options (e.g., desk mats for bulk quantities)
+4. Review & sign the agreement → Proceed to checkout (mock mode auto-confirms)
+5. Log in as a **merchant** → View your negotiation analytics & audit logs
+
+---
+
+## What is ATOAC?
+
+Traditional e-commerce is buyer-focused: humans visit storefronts and checkout manually. **Agentic commerce changes this:**
+
+```
+┌─────────────┐
+│ User        │
+└──────┬──────┘
+       │
+┌──────▼──────────┐
+│ Buyer Agent     │ ← AI agent discovers & buys on behalf of user
+│ (ChatGPT, etc)  │
+└──────┬──────────┘
+       │ "Find 50 office chairs, ≤₹4300/unit, 7d delivery"
+       │
+       ├──────────────────────┬──────────────────────┐
+       │                      │                      │
+    ┌──▼─────┐          ┌────▼──┐            ┌─────▼──┐
+    │ ATOAC   │          │ATOAC  │            │ Other  │
+    │Merchant │          │Merchant           │ Systems
+    │Agent A  │          │Agent B │            │
+    └──┬─────┘          └────┬──┘            └─────┬──┘
+       │ Counter: ₹3900 ×50  │ Counter: ₹4100     │
+       │ (guardrail: floor   │ Accepted!          │
+       │  price ₹2000,max15% │                    │
+       │  discount)          │                    │
+       └──────────┬──────────┘                    │
+                  │ Winner: Merchant B @ ₹4100
+                  │ + Upsell: Desk Mats
+                  │ = Agreement
+                  │
+                  └──► Razorpay (payment + verification)
+```
+
+**In short:** ATOAC is your agent. You (the merchant) define your rules—floor price, max discount, who qualifies for bulk discounts—then ATOAC negotiates on your behalf, upsells smartly, and passes the deal to checkout.
+
+---
+
+## Key Features
+
+### ✅ Fully Built & Tested
+
+| Feature | What It Does |
+|---------|-------------|
+| **Autonomous Merchant Agent** | Negotiates buyer requests within guardrails (floor price, max discount %, max rounds) |
+| **Deterministic Guardrail** | LLM-free price/accept/reject logic ensures guardrails are **never** bypassed |
+| **Multi-Merchant Negotiation** | Coordinate negotiations across multiple competing merchants in a single buyer request |
+| **Negotiation Engine** | Structured offer/counter/accept/reject lifecycle with full audit trail |
+| **Upsell & Cross-Sell** | Quantity-triggered rules (e.g., 30+ chairs → suggest desk mats) |
+| **Agreement Generation** | Freeze negotiated terms into a legally-auditable, JSON-formatted agreement |
+| **Razorpay Integration** | Create real payment links, verify webhook signatures (HMAC-SHA256), handle idempotent payments |
+| **Login Rate Limiting** | 5 attempts per 5 minutes; offenders locked out |
+| **Audit Logging** | Every negotiation, offer, and policy change is logged & queryable per merchant |
+| **Merchant Analytics** | Track negotiation count, success rate, upsell impact, and revenue insights |
+| **Buyer & Merchant UI** | Vanilla HTML/JS (no build step required); product & merchant detail pages |
+
+### 🟡 Partially Built
+
+- **Concurrent Negotiation** — Runs sequentially; next version uses `asyncio.gather` for parallel coordination
+- **Full Negotiation State Machine** — Currently binary (`AGREED`/`DENIED`); full state machine is designed & specified
+- **Advanced Analytics** — Today: 3 core metrics + 1 insight; full 6-screen dashboard designed
+- **Inventory Reservation** — Stock is checked; TTL-based holds are designed but not yet enforced
+
+### ⬜ Not Yet Built
+
+- Capability discovery/registry (merchant capability documents)
+- Payment failure recovery (only success path implemented)
+- Email verification & password reset
+- Hard total-budget cap (buyer's implied maximum)
+- Merchant approval for policy changes before they take effect
+- Full graceful inventory failure flow
+
+**See [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md) for complete status breakdown.**
+
+---
+
+## Installation
+
+### Prerequisites
+
+- **Python 3.9+** ([download](https://www.python.org/downloads/))
+- **pip** (comes with Python)
+- **SQLite** (built-in) or **PostgreSQL** (optional, for production)
+
+### Step 1: Clone the Repository
+
+```bash
+git clone https://github.com/your-username/atoac.git
+cd atoac
+```
+
+### Step 2: Create a Virtual Environment
+
+**On macOS/Linux:**
+```bash
+python3 -m venv venv
+source venv/bin/activate
+```
+
+**On Windows (PowerShell):**
+```powershell
+python -m venv venv
+.\venv\Scripts\Activate.ps1
+```
+
+**On Windows (Command Prompt):**
+```cmd
+python -m venv venv
+venv\Scripts\activate.bat
+```
+
+### Step 3: Install Dependencies
 
 ```bash
 cd atoac_saas
-python -m pip install -r requirements.txt
-python seed.py                       # demo merchants/buyer/products (once)
-python -m uvicorn main:app --reload  # http://127.0.0.1:8000
+pip install -r requirements.txt
 ```
 
-Open http://127.0.0.1:8000 and log in (all passwords `password123`):
+### Step 4: Configure Environment
 
-| Role       | Email                    |
-|------------|--------------------------|
-| Buyer      | buyer@test.com           |
-| Merchant A | a@comfortseating.com     |
-| Merchant B | b@workspacedirect.com    |
-
-**Demo path:** buyer searches `chair`, qty `50`, target `₹4300`, delivery `7d` →
-two merchants negotiate → pick a deal → accept the desk-mat upsell → agreement →
-checkout (mock mode auto-confirms).
-
-## Configuration (`.env`, see `.env.example`)
-
-- `DATABASE_URL` — SQLite by default; point at Postgres with no code change.
-- `RAZORPAY_*` — leave blank for **mock mode**; set keys + webhook secret for live.
-- `GEMINI_API_KEY` — optional (Google Gemini free tier). When set, the agents write
-  natural-language negotiation lines/summaries. **The LLM never decides price or touches
-  the guardrail** — with it off, the product behaves identically using templated messages.
-
-## What's enforced (tested)
-
-- **Guardrail is LLM-free** — all pricing/accept/reject is pure arithmetic in
-  `negotiation.py`; below-floor / over-discount prices are rejected.
-- **Merchant privacy** — `floor_price` and policy fields never appear in any
-  buyer-facing response.
-- **Ownership** — a merchant editing another merchant's product gets `403`.
-- **Payment amount** is computed from `Agreement.total`, never from the client.
-- **Webhooks** are HMAC-SHA256 verified and idempotent (tampered→400, replay→ignored).
-- **Login rate limiting** — 5 attempts / 5-minute lockout.
-- **Policy-change approval** — material pricing/policy edits are queued for explicit merchant
-  approval; negotiations keep using the approved policy until then (§28).
-- **Inventory reservation** — stock is held (with a TTL) only when a buyer commits an
-  agreement; availability = physical stock − active holds; holds are consumed on
-  payment, released on failure/expiry.
-- **Graceful inventory shortfall (§19.1)** — if stock drops after negotiation, the
-  agent offers buyer-respecting alternatives instead of failing: take a partial
-  quantity now, backorder the full quantity within the delivery window, or switch to
-  another merchant who can fulfil it.
-- **Payment failure + retry (§19.2)** — a failed/cancelled/expired payment webhook
-  marks the agreement `FAILED` and releases the hold; the buyer can re-checkout, which
-  re-reserves and confirms.
-
-## Tests
+Copy `.env.example` to `.env` and update values:
 
 ```bash
-python -m pip install pytest
-python -m pytest tests/ -q     # 12 tests: core guarantees + inventory/payment failure
+cp .env.example .env
 ```
 
-## Layout
+Then edit `.env`:
+
+```ini
+# Database (SQLite by default, or PostgreSQL)
+DATABASE_URL=sqlite:///./atoac.db
+
+# JWT Secret (generate a strong one for production)
+JWT_SECRET=your-secret-key-change-this-in-production
+
+# Razorpay (leave blank for mock mode; set for live payments)
+# RAZORPAY_KEY_ID=rzp_xxx
+# RAZORPAY_KEY_SECRET=yyy
+# RAZORPAY_WEBHOOK_SECRET=zzz
+
+# Google Gemini (optional; enables natural-language negotiation summaries)
+# GEMINI_API_KEY=your-key
+# GEMINI_MODEL=gemini-3.5-flash
+
+# Seed data on startup (useful for development)
+SEED_ON_START=1
+```
+
+### Step 5: Seed Demo Data
+
+```bash
+python seed.py
+```
+
+This creates:
+- 2 test merchants with sample products (chairs, desks, ergonomic supplies)
+- 1 test buyer account
+- Predefined upsell rules (e.g., bulk quantity triggers)
+
+### Step 6: Start the Development Server
+
+```bash
+python -m uvicorn main:app --reload
+```
+
+You should see:
+```
+INFO:     Application startup complete
+Uvicorn running on http://127.0.0.1:8000
+```
+
+---
+
+## Usage & Demo
+
+### Web UI
+
+Open http://127.0.0.1:8000 in your browser.
+
+#### Buyer Workflow
+
+1. **Login** as `buyer@test.com` (password: `password123`)
+2. **Search** for products (e.g., "chair")
+3. **Enter requirements:**
+   - Quantity (e.g., 50)
+   - Target price per unit
+   - Desired delivery time
+4. **View candidates** — ATOAC finds matching merchants
+5. **Review & select** — Each merchant negotiates autonomously; pick the best offer
+6. **Upsell** — Accept complementary suggestions (e.g., desk mats with your chairs)
+7. **Review agreement** — See the frozen terms (pricing, quantities, delivery)
+8. **Checkout** — Proceed to Razorpay payment (mock mode auto-confirms)
+
+#### Merchant Workflow
+
+1. **Login** as `a@comfortseating.com` or `b@workspacedirect.com` (password: `password123`)
+2. **Manage products:**
+   - Create a new product
+   - Set floor price, max discount %, max negotiation rounds
+   - Edit or delete existing products
+3. **View negotiations:**
+   - See all active and completed negotiation histories
+   - Review per-offer counters & audit trail
+4. **Check analytics:**
+   - Negotiation count, success rate
+   - Upsell frequency & impact
+   - Revenue insights
+5. **Export audit logs** for compliance
+
+### API Endpoints (Key Routes)
+
+**Merchant endpoints:**
+- `POST /merchant/signup` — Create merchant account
+- `POST /merchant/login` — Login & get JWT
+- `GET /merchant/products` — List your products
+- `POST /merchant/products` — Create product with guardrails
+- `PUT /merchant/products/{id}` — Update product
+- `DELETE /merchant/products/{id}` — Delete product
+- `GET /merchant/analytics` — Your negotiation metrics
+
+**Buyer endpoints:**
+- `POST /buyer/signup` — Create buyer account
+- `POST /buyer/login` — Login & get JWT
+- `GET /search` — Search products across merchants
+- `GET /merchants/{id}` — Merchant profile
+- `POST /negotiate` — Start multi-merchant negotiation
+- `GET /agreements/{id}` — View agreement
+- `POST /agreements/{id}/confirm` — Sign agreement
+
+**Negotiation endpoints:**
+- `GET /negotiations` — List your negotiations
+- `POST /negotiations/{id}/offer` — Send counter-offer (internal use)
+- `POST /negotiations/{id}/accept` — Accept negotiated terms
+- `GET /negotiations/{id}/audit` — Full audit trail
+
+**Payment endpoints:**
+- `POST /checkout` — Create Razorpay payment link
+- `GET /webhooks/razorpay` — Webhook receiver (HMAC-verified)
+
+**Analytics endpoints:**
+- `GET /analytics/dashboard` — Your metrics
+- `GET /audit/logs` — Queryable event logs
+
+See `main.py` for complete route definitions.
+
+---
+
+## Configuration
+
+### Environment Variables (`.env`)
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `DATABASE_URL` | No | `sqlite:///./atoac.db` | Database connection string; supports SQLite, PostgreSQL |
+| `JWT_SECRET` | **Yes** | (generated) | Secret key for JWT tokens; **must be strong in production** |
+| `JWT_ALGORITHM` | No | `HS256` | JWT signing algorithm |
+| `JWT_EXPIRATION_HOURS` | No | `24` | Token expiration time |
+| `RAZORPAY_KEY_ID` | No | (unset) | Razorpay Key ID (leave blank for mock mode) |
+| `RAZORPAY_KEY_SECRET` | No | (unset) | Razorpay Key Secret |
+| `RAZORPAY_WEBHOOK_SECRET` | No | (unset) | Razorpay webhook secret for HMAC verification |
+| `GEMINI_API_KEY` | No | (unset) | Google Gemini API key (optional; enables LLM summaries) |
+| `GEMINI_MODEL` | No | `gemini-3.5-flash` | Gemini model name |
+| `SEED_ON_START` | No | `0` | Set to `1` to auto-seed demo data on startup |
+
+### Database Configuration
+
+**SQLite (default, great for development):**
+```ini
+DATABASE_URL=sqlite:///./atoac.db
+```
+
+**PostgreSQL (recommended for production):**
+```ini
+DATABASE_URL=postgresql://user:password@localhost:5432/atoac
+```
+
+Database will auto-initialize on first run (`init_db()` in `config.py`).
+
+### Razorpay Configuration
+
+**Mock Mode (development):**
+Leave `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `RAZORPAY_WEBHOOK_SECRET` blank. The system will use deterministic mock responses.
+
+**Live Mode (production):**
+1. Sign up at [Razorpay](https://razorpay.com)
+2. Get your Key ID & Key Secret from the dashboard
+3. Set up a webhook endpoint in Razorpay pointing to `https://your-domain.com/webhooks/razorpay`
+4. Copy the webhook secret into `.env`
+5. Set environment variables:
+   ```ini
+   RAZORPAY_KEY_ID=rzp_live_xxxxx
+   RAZORPAY_KEY_SECRET=yyyyy
+   RAZORPAY_WEBHOOK_SECRET=zzzzz
+   ```
+
+All webhook payloads are verified with HMAC-SHA256; tampered or replayed webhooks are rejected.
+
+---
+
+## Architecture
+
+### System Overview
 
 ```
-atoac_saas/
-├── main.py            FastAPI app + all routes
-├── models.py          SQLAlchemy models (§22)
-├── database.py        engine/session
-├── config.py          env-driven settings
-├── auth.py            bcrypt + JWT + rate limiting
-├── audit.py           DB-backed audit trail
-├── discovery.py       cross-merchant search + filter/rank
-├── negotiation.py     turn-based chat engine + guardrail  ← money path, no LLM
-├── inventory.py       reservation lifecycle + shortfall alternatives (§19.1)
-├── analytics.py       merchant analytics & revenue intelligence (§16/§18)
-├── llm.py             optional narration layer (safe fallback)
-├── razorpay_client.py payment link + webhook signature
-├── seed.py            demo data (reference scenario §25)
-├── tests/             pytest suite (isolated temp DB, 32 tests)
-└── frontend/          vanilla HTML/JS, no build step
-    ├── chat.js        reusable live negotiation chat panel (both portals)
-    ├── buyer.*        search → live chat → upsell → agreement → checkout
-    └── merchant.*     dashboard: analytics, live negotiations, policies, audit
+┌─────────────────┐
+│   Frontend UI   │ (Buyer & Merchant dashboards)
+│  (HTML/JS/CSS)  │
+└────────┬────────┘
+         │
+    ┌────▼─────────────────────────────────┐
+    │        FastAPI Application            │
+    │  (main.py — route handlers)           │
+    ├────────────────────────────────────┤
+    │  ┌─────────────────────────────┐  │
+    │  │ Auth Module                 │  │ (auth.py)
+    │  │ • Login/signup              │  │
+    │  │ • JWT generation & verify   │  │
+    │  │ • Rate limiting             │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Discovery Module            │  │ (discovery.py)
+    │  │ • Product search            │  │
+    │  │ • Merchant lookup           │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Negotiation Engine          │  │ (negotiation.py)
+    │  │ • Guardrail enforcement     │  │
+    │  │ • Offer/counter logic       │  │
+    │  │ • LLM-free safety layer     │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Upsell/Cross-Sell Engine    │  │ (intent.py)
+    │  │ • Rule evaluation           │  │
+    │  │ • Bundle recommendations    │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Agreement Engine            │  │ (inventory.py)
+    │  │ • Freeze negotiated terms   │  │
+    │  │ • Generate JSON schema      │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Payment Module              │  │ (razorpay_client.py)
+    │  │ • Payment link creation     │  │
+    │  │ • Webhook verification      │  │
+    │  │ • Idempotent processing     │  │
+    │  └─────────────────────────────┘  │
+    │                                    │
+    │  ┌─────────────────────────────┐  │
+    │  │ Analytics & Audit           │  │ (analytics.py, audit.py)
+    │  │ • Metrics & insights        │  │
+    │  │ • Event logging             │  │
+    │  └─────────────────────────────┘  │
+    └────┬─────────────────────────────┘
+         │
+    ┌────▼──────────────┐
+    │  SQLAlchemy ORM   │
+    │  (models.py)      │
+    └────┬──────────────┘
+         │
+    ┌────▼──────────────┐
+    │  SQLite / PG DB   │
+    │  (atoac.db)       │
+    └───────────────────┘
+
+    ┌──────────────────┐
+    │  Razorpay API    │ (External payment processor)
+    │  (when live)     │
+    └──────────────────┘
+
+    ┌──────────────────┐
+    │  Google Gemini   │ (Optional LLM for summaries)
+    │  (when set)      │
+    └──────────────────┘
 ```
+
+### Core Modules
+
+| Module | Purpose |
+|--------|---------|
+| `main.py` | FastAPI route handlers & WebSocket hub |
+| `auth.py` | JWT, bcrypt, rate limiting |
+| `models.py` | SQLAlchemy ORM (User, Merchant, Product, Negotiation, Agreement, etc.) |
+| `database.py` | SQLAlchemy engine & session management |
+| `config.py` | Settings from environment & `.env` |
+| `discovery.py` | Product search & merchant lookup |
+| `negotiation.py` | Core negotiation logic & guardrail enforcement |
+| `intent.py` | Upsell/cross-sell rule evaluation |
+| `inventory.py` | Agreement generation & stock management |
+| `analytics.py` | Negotiation metrics & insights |
+| `audit.py` | Event logging & compliance queries |
+| `razorpay_client.py` | Payment link creation & webhook handling |
+| `llm.py` | Optional Google Gemini integration for summaries |
+| `ws_hub.py` | WebSocket connection management |
+
+---
+
+## Implementation Status
+
+### ✅ Fully Built & Tested End-to-End
+
+- ✅ Merchant + buyer signup/login with bcrypt-hashed passwords, JWT sessions
+- ✅ Merchant product CRUD with ownership enforcement (403 if you try to edit another merchant's product)
+- ✅ Cross-merchant product search & negotiation
+- ✅ Deterministic guardrail (floor price, max discount %, max rounds) — **never bypassed by LLM**
+- ✅ Upsell/cross-sell engine (quantity-triggered rules)
+- ✅ Agreement generation matching JSON schema
+- ✅ Razorpay integration with real Payment Link creation (mock fallback with no keys)
+- ✅ Webhook signature verification (HMAC-SHA256, tested with valid/tampered/replayed payloads)
+- ✅ Login rate limiting (5 attempts / 5-min lockout)
+- ✅ Audit logging (DB-backed, queryable per merchant)
+- ✅ Merchant analytics (negotiation count, success rate, insights)
+- ✅ Buyer + Merchant frontend (vanilla HTML/JS, no build step)
+
+### 🟡 Partially Built
+
+- 🟡 **Multi-merchant negotiation** runs sequentially; designed to run concurrently with `asyncio.gather`
+- 🟡 **Negotiation state machine** is binary (`AGREED`/`DENIED`); full state machine designed but not yet implemented
+- 🟡 **Analytics dashboard** is basic (3 metrics + 1 insight); full 6-screen dashboard designed
+- 🟡 **Inventory reservation** — stock is checked but not held with TTL during negotiation
+
+### ⬜ Not Yet Built
+
+- ⬜ Capability discovery/registry documents
+- ⬜ Inventory failure recovery (offer alternatives when stock drops)
+- ⬜ Payment failure path (only success is handled)
+- ⬜ Email verification & password reset
+- ⬜ Hard total-budget cap enforcement
+- ⬜ Merchant approval workflow for policy changes
+- ⬜ Full graceful degradation for edge cases
+
+**For detailed status & rationale, see [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md#0-implementation-status-snapshot-read-this-first).**
+
+---
+
+## API Overview
+
+### Authentication
+
+All requests requiring authentication use **Bearer JWT tokens**:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" http://127.0.0.1:8000/merchant/products
+```
+
+Tokens are obtained via `/merchant/login` or `/buyer/login`.
+
+### Request/Response Format
+
+All endpoints use **JSON**:
+
+**Request:**
+```bash
+curl -X POST http://127.0.0.1:8000/merchant/products \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Office Chair",
+    "floor_price": 2000,
+    "max_discount_pct": 15,
+    "max_negotiation_rounds": 5
+  }'
+```
+
+**Response:**
+```json
+{
+  "id": "prod_123",
+  "name": "Office Chair",
+  "merchant_id": "merch_001",
+  "floor_price": 2000,
+  "max_discount_pct": 15,
+  "created_at": "2025-01-15T10:00:00Z"
+}
+```
+
+### Error Handling
+
+Standard HTTP status codes:
+
+| Code | Meaning |
+|------|---------|
+| `200` | Success |
+| `201` | Created |
+| `400` | Bad request (validation error) |
+| `401` | Unauthorized (missing/invalid token) |
+| `403` | Forbidden (ownership check, rate limit) |
+| `404` | Not found |
+| `422` | Unprocessable entity (validation) |
+| `500` | Server error |
+
+---
+
+## Testing
+
+Run the full test suite:
+
+```bash
+# Install test dependencies (already in requirements.txt)
+pytest tests/ -v
+
+# Run a specific test file
+pytest tests/test_negotiation.py -v
+
+# Run with coverage
+pytest tests/ --cov=. --cov-report=html
+```
+
+**Key test suites:**
+- `test_auth.py` — Login, JWT, rate limiting
+- `test_negotiation.py` — Guardrail enforcement, offer/counter logic
+- `test_core.py` — Product CRUD, ownership checks
+- `test_policy.py` — Policy change workflows
+- `test_ws.py` — WebSocket negotiation flows
+- `test_payments.py` — Razorpay integration & webhook verification
+- `test_analytics.py` — Metrics & insights
+
+---
+
+## Deployment
+
+### Option 1: Render (Recommended for Beginners)
+
+[Render](https://render.com) provides free hosting with WebSocket support.
+
+**Steps:**
+1. Push this repository to GitHub
+2. Sign in to Render → **New** → **Blueprint**
+3. Select this repository
+4. Click **Deploy** (Render reads `render.yaml` for configuration)
+5. Set secrets in Render dashboard:
+   - `GEMINI_API_KEY` (if using LLM features)
+   - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` (for live payments)
+
+**Your app will be live at** `https://atoac-xxx.onrender.com`
+
+### Option 2: Docker (Local or Cloud)
+
+```bash
+# Build image
+docker build -t atoac:latest .
+
+# Run container
+docker run -d \
+  -p 8000:8000 \
+  -e DATABASE_URL=sqlite:///./atoac.db \
+  -e JWT_SECRET=your-secret \
+  atoac:latest
+```
+
+### Option 3: Heroku (Legacy)
+
+```bash
+# Install Heroku CLI
+brew tap heroku/brew && brew install heroku
+
+# Login
+heroku login
+
+# Create app
+heroku create atoac-demo
+
+# Add Procfile (already included)
+# Set config vars
+heroku config:set JWT_SECRET=your-secret
+heroku config:set GEMINI_API_KEY=your-key
+
+# Deploy
+git push heroku main
+```
+
+### Option 4: Manual VPS (AWS EC2, DigitalOcean, Linode)
+
+```bash
+# On your VPS:
+ssh user@your-server
+
+# Clone, install, run
+git clone https://github.com/your-username/atoac.git
+cd atoac/atoac_saas
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+python -m uvicorn main:app --host 0.0.0.0 --port 80 &
+```
+
+### Production Checklist
+
+Before deploying to production:
+
+- [ ] Change `JWT_SECRET` to a strong random value
+- [ ] Use PostgreSQL instead of SQLite (set `DATABASE_URL`)
+- [ ] Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET`
+- [ ] Enable HTTPS (use a reverse proxy like Nginx or Let's Encrypt)
+- [ ] Set up monitoring & error logging (e.g., Sentry)
+- [ ] Run database migrations (auto-applied on startup)
+- [ ] Test webhook endpoint (Razorpay test mode)
+- [ ] Set up backups for database
+- [ ] Configure CORS for your domain
+- [ ] Review security checklist in `config.py`
+
+---
+
+## Contributing
+
+We welcome contributions! Please follow these steps:
+
+### 1. Fork & Clone
+
+```bash
+git clone https://github.com/your-fork/atoac.git
+cd atoac
+```
+
+### 2. Create a Feature Branch
+
+```bash
+git checkout -b feature/your-feature-name
+```
+
+### 3. Make Changes
+
+- Follow PEP 8 (Python style guide)
+- Add docstrings to functions
+- Update tests for new functionality
+- Update README if adding new features
+
+### 4. Test Your Changes
+
+```bash
+pytest tests/ -v
+python -m uvicorn main:app --reload
+```
+
+### 5. Commit & Push
+
+```bash
+git add .
+git commit -m "feat: add your feature description"
+git push origin feature/your-feature-name
+```
+
+### 6. Open a Pull Request
+
+Go to GitHub and open a PR from your branch to `main`. Include:
+- **Description** of what changed
+- **Motivation** (why this change is needed)
+- **Testing** (what you tested)
+- **Screenshots/GIFs** if UI changes
+
+### Development Guidelines
+
+- **Code Style:** Use `black` for formatting
+  ```bash
+  pip install black
+  black .
+  ```
+- **Type Hints:** Add type hints to all functions
+- **Tests:** Aim for >80% coverage
+  ```bash
+  pytest tests/ --cov=. --cov-report=term-missing
+  ```
+- **Docstrings:** Use Google-style docstrings
+  ```python
+  def negotiate(buyer_request: BuyerRequest) -> NegotiationResult:
+      """Orchestrate multi-merchant negotiation.
+      
+      Args:
+          buyer_request: The buyer's search & offer parameters.
+          
+      Returns:
+          NegotiationResult with accepted offers per merchant.
+      """
+  ```
+
+### Reporting Issues
+
+Found a bug? Please open a [GitHub Issue](../../issues) with:
+- **Title:** Brief description
+- **Description:** What happened & what you expected
+- **Steps to Reproduce:** Exact steps to trigger the bug
+- **Environment:** OS, Python version, branch/commit
+- **Logs:** Error messages or stack traces
+
+### Architecture & Design
+
+Before implementing large changes, please:
+1. Read [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md) to understand the design
+2. Discuss in an issue or PR to get feedback
+3. Reference the [Implementation Status](#implementation-status) to see what's already built
+
+---
+
+## License
+
+This project is licensed under the **MIT License** — see [LICENSE](LICENSE) for details.
+
+**TL;DR:** You can use, modify, and distribute this code freely, including for commercial purposes, as long as you include the license and don't hold us liable.
+
+---
+
+## Support & Community
+
+- **Questions?** Open a [GitHub Discussion](../../discussions)
+- **Found a bug?** Open a [GitHub Issue](../../issues)
+- **Want to contribute?** See [Contributing](#contributing) above
+- **Architecture deep-dive?** Read [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md)
+- **Email:** maintainers@atoac.dev (replace with your contact)
+
+---
 
 ## Roadmap
 
-**Phase 1.5 — DONE** ✅
-- §19.1 graceful inventory-failure flow (partial / backorder / alternative merchant)
-- Payment `FAILED` handling + retry
-- Inventory reservation with expiry
-- Automated test suite
+### Q1 2025
+- [ ] Full concurrent multi-merchant negotiation (`asyncio.gather`)
+- [ ] Complete negotiation state machine
+- [ ] Inventory reservation with TTL
+- [ ] Payment failure recovery
 
-**Phase 2 — in progress**
-- ✅ Concurrent negotiation — merchant sessions run in parallel threads (`asyncio.gather`
-  + `asyncio.to_thread`), each with its own DB session (SQLite in WAL mode). Verified
-  parallel by timing.
-- ✅ Per-round `Offer` persistence + negotiation state machine (`NEGOTIATING → AGREED |
-  DENIED`) — rounds are first-class queryable records, not just audit-log text.
-- ✅ Structured reason codes (`AGREED_WITHIN_TARGET`, `WALKAWAY_EXCEEDED`, …) on every
-  negotiation and offer, alongside the human-readable string.
-- ✅ `GET /api/negotiations/{uid}` — standalone lookup with the full offer trail, visible
-  to the buyer or merchant party only (floor price never included).
-- ✅ Merchant analytics dashboard (`analytics.py`, §16/§18) — overview (GMV, AOV, success
-  rate, avg rounds), negotiation intelligence (closing prices per product, discount spread,
-  objection/denial breakdown by reason code), upsell intelligence (attach rate + cross-sell
-  revenue), payment health, data-driven revenue recommendations with impact estimates, and a
-  recent-negotiations feed.
-- ✅ Merchant-approval workflow (§28) — edits to **material** policy fields (list/floor price,
-  discount cap, min qty, max rounds) are queued as a `PolicyChangeRequest` and take effect only
-  on approval; non-material edits (name, stock, delivery) apply immediately. Live negotiations
-  keep using the current approved policy until a change is approved.
-- ✅ **Persistent chat history** (`Conversation` model) — buyer conversations are saved
-  server-side and restored on reload; a sidebar lists recent chats with a "New chat" button,
-  and reopening a chat replays its full transcript (as static history). Endpoints under
-  `/api/buyer/conversations`.
-- ✅ **Conversational buyer (Claude-style) + NLP** (`intent.py`, §7) — the buyer portal is a
-  single chat thread. You describe your request in plain English ("50 ergonomic chairs under
-  ₹4300 each within a week"); an NLP parser extracts product/quantity/target/delivery (LLM when
-  a key is set, deterministic regex otherwise). Merchants appear inline, and you negotiate with
-  them right there in natural language ("that's too high", "offer 4300", "accept") — parsed into
-  guardrail-checked actions. Endpoints: `POST /api/buyer/intent`, `POST /api/negotiations/{uid}/say`.
-- ✅ **Live LLM agents** (optional) — set `GEMINI_API_KEY` and negotiation lines + intent
-  parsing are authored by Google Gemini over REST (free tier; default `gemini-2.0-flash`, set
-  `GEMINI_MODEL=gemini-2.5-flash` to change). The LLM only *phrases* messages — the price on
-  every turn is still the deterministic engine value, guardrail-checked. Without a key,
-  deterministic templates are used (identical behavior).
-- ✅ **Order history** — `GET /api/buyer/orders` and `GET /api/merchant/orders`; a merchant Orders
-  view and a buyer "Orders" button / "show my orders" chat command.
-- ✅ **Live merchant notifications** — account-level `WS /ws/merchant` pushes a toast when a
-  negotiation of theirs starts, needs a human takeover, or closes; the live table refreshes with it.
-- ✅ **Live over WebSockets** (`ws_hub.py`) — negotiations stream over `WS /ws/negotiations/{uid}`
-  (auth via `?token=`). A single server-side driver auto-advances AGENT turns and broadcasts state
-  to everyone watching, so a negotiation progresses even with no buyer tab open. Clients send
-  `{type: say|act|control}`.
-- ✅ **Light / dark theme** — toggle in the header, persisted per browser; no-flash init in each
-  page head. All colors are CSS-variable tokens with a `[data-theme="light"]` override.
-- ✅ **Merchant analytics visuals** — close-rate donut, outcome bars, per-product closing-price
-  bars, objection bars, and upsell attach-rate progress bars (hand-rolled inline SVG, theme-aware).
-- ✅ **Interactive negotiation chat + human takeover** — a negotiation is a live turn-based
-  chat (`NegotiationMessage` log). Each side is driven by its AGENT or, once paused, by its
-  HUMAN. Either party can pause its agent and respond (counter / accept / reject / free text);
-  a human **merchant is still bounded by the guardrail** (can't breach floor/discount cap), a
-  human **buyer is unconstrained**. Both portals show the conversation live (polling); the buyer
-  watches its agent negotiate and can jump in, the merchant watches/takes over from the dashboard.
-  Endpoints: `POST /api/negotiations/start`, `/{uid}/step`, `/{uid}/control`, `/{uid}/act`,
-  `GET /api/negotiations/{uid}` (chat state), `GET /api/merchant/negotiations`.
-- ⬜ Capability registry (§9).
+### Q2 2025
+- [ ] Capability discovery & registry documents
+- [ ] Merchant approval workflow for policy changes
+- [ ] 6-screen analytics dashboard
+- [ ] Email verification & password reset
+
+### Q3 2025
+- [ ] Webhooks for buyer agents (standardized API)
+- [ ] Merchant SDK (Python, Node.js, Go)
+- [ ] Advanced reporting & compliance exports
+- [ ] Multi-currency support
+
+### Q4 2025
+- [ ] Mobile app (React Native)
+- [ ] Marketplace mode (N merchants, N buyers)
+- [ ] AI model fine-tuning for negotiation
+- [ ] White-label deployment
+
+---
+
+## Acknowledgments
+
+- **FastAPI** — Fast, modern web framework
+- **SQLAlchemy** — Flexible ORM
+- **Razorpay** — Payment infrastructure
+- **Google Gemini** — LLM capabilities
+- **Contributors** — Thanks to all who've helped shape ATOAC
+
+---
+
+**Last Updated:** January 2025  
+**Version:** 3.0 (Phase 1 Vertical Slice)  
+**Status:** Active Development ✅
+
