@@ -80,16 +80,16 @@ Traditional e-commerce is buyer-focused: humans visit storefronts and checkout m
        │
        ├──────────────────────┬──────────────────────┐
        │                      │                      │
-    ┌──▼─────┐          ┌────▼──┐            ┌─────▼──┐
-    │ ATOAC   │          │ATOAC  │            │ Other  │
-    │Merchant │          │Merchant           │ Systems
+    ┌──▼─────┐           ┌────▼── ┐            ┌─────▼──┐
+    │ ATOAC   │          │ATOAC   │            │ Other  │
+    │Merchant │          │Merchant             │ Systems
     │Agent A  │          │Agent B │            │
-    └──┬─────┘          └────┬──┘            └─────┬──┘
-       │ Counter: ₹3900 ×50  │ Counter: ₹4100     │
-       │ (guardrail: floor   │ Accepted!          │
-       │  price ₹2000,max15% │                    │
-       │  discount)          │                    │
-       └──────────┬──────────┘                    │
+    └──┬─────┘           └────┬── ┘            └─────┬──┘
+       │ Counter: ₹3900 ×50  │ Counter: ₹4100        │
+       │ (guardrail: floor   │ Accepted!             │
+       │  price ₹2000,max15% │                       │
+       │  discount)          │                       │
+       └──────────┬──────────┘                       │
                   │ Winner: Merchant B @ ₹4100
                   │ + Upsell: Desk Mats
                   │ = Agreement
@@ -119,23 +119,7 @@ Traditional e-commerce is buyer-focused: humans visit storefronts and checkout m
 | **Merchant Analytics** | Track negotiation count, success rate, upsell impact, and revenue insights |
 | **Buyer & Merchant UI** | Vanilla HTML/JS (no build step required); product & merchant detail pages |
 
-### 🟡 Partially Built
 
-- **Concurrent Negotiation** — Runs sequentially; next version uses `asyncio.gather` for parallel coordination
-- **Full Negotiation State Machine** — Currently binary (`AGREED`/`DENIED`); full state machine is designed & specified
-- **Advanced Analytics** — Today: 3 core metrics + 1 insight; full 6-screen dashboard designed
-- **Inventory Reservation** — Stock is checked; TTL-based holds are designed but not yet enforced
-
-### ⬜ Not Yet Built
-
-- Capability discovery/registry (merchant capability documents)
-- Payment failure recovery (only success path implemented)
-- Email verification & password reset
-- Hard total-budget cap (buyer's implied maximum)
-- Merchant approval for policy changes before they take effect
-- Full graceful inventory failure flow
-
-**See [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md) for complete status breakdown.**
 
 ---
 
@@ -481,24 +465,8 @@ All webhook payloads are verified with HMAC-SHA256; tampered or replayed webhook
 - ✅ Merchant analytics (negotiation count, success rate, insights)
 - ✅ Buyer + Merchant frontend (vanilla HTML/JS, no build step)
 
-### 🟡 Partially Built
 
-- 🟡 **Multi-merchant negotiation** runs sequentially; designed to run concurrently with `asyncio.gather`
-- 🟡 **Negotiation state machine** is binary (`AGREED`/`DENIED`); full state machine designed but not yet implemented
-- 🟡 **Analytics dashboard** is basic (3 metrics + 1 insight); full 6-screen dashboard designed
-- 🟡 **Inventory reservation** — stock is checked but not held with TTL during negotiation
 
-### ⬜ Not Yet Built
-
-- ⬜ Capability discovery/registry documents
-- ⬜ Inventory failure recovery (offer alternatives when stock drops)
-- ⬜ Payment failure path (only success is handled)
-- ⬜ Email verification & password reset
-- ⬜ Hard total-budget cap enforcement
-- ⬜ Merchant approval workflow for policy changes
-- ⬜ Full graceful degradation for edge cases
-
-**For detailed status & rationale, see [ATOAC_ARCHITECTURE.md](ATOAC_ARCHITECTURE.md#0-implementation-status-snapshot-read-this-first).**
 
 ---
 
@@ -777,31 +745,6 @@ This project is licensed under the **MIT License** — see [LICENSE](LICENSE) fo
 
 ---
 
-## Roadmap
-
-### Q1 2025
-- [ ] Full concurrent multi-merchant negotiation (`asyncio.gather`)
-- [ ] Complete negotiation state machine
-- [ ] Inventory reservation with TTL
-- [ ] Payment failure recovery
-
-### Q2 2025
-- [ ] Capability discovery & registry documents
-- [ ] Merchant approval workflow for policy changes
-- [ ] 6-screen analytics dashboard
-- [ ] Email verification & password reset
-
-### Q3 2025
-- [ ] Webhooks for buyer agents (standardized API)
-- [ ] Merchant SDK (Python, Node.js, Go)
-- [ ] Advanced reporting & compliance exports
-- [ ] Multi-currency support
-
-### Q4 2025
-- [ ] Mobile app (React Native)
-- [ ] Marketplace mode (N merchants, N buyers)
-- [ ] AI model fine-tuning for negotiation
-- [ ] White-label deployment
 
 ---
 
